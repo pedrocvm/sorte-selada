@@ -1,107 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import Gem3D from "@/components/Gem3D";
 import GoldParticles from "@/components/GoldParticles";
 import RoundCard from "@/components/RoundCard";
+import Deck from "@/components/Deck";
 import type { Rodada } from "@/lib/rounds";
 
 const PASSOS = [
   { n: "1", t: "Trancamos a lista", d: "Geramos uma impressão digital única da lista de participantes, antes de sortear." },
   { n: "2", t: "Um código de fora decide", d: "O número que sorteia vem de algo público que a loja não controla — como a escalação da Seleção." },
-  { n: "3", t: "Você confere sozinho", d: "Cole a mesma lista e o mesmo código e chegue exatamente no mesmo resultado." },
+  { n: "3", t: "Você confere por conta própria", d: "Cole a mesma lista e o mesmo código e chegue exatamente no mesmo resultado." },
 ];
 
 // Home em formato de "deck": tudo cabe na primeira dobra, e cada seção troca
-// com animação em vez de rolar a página. Setas, bolinhas, teclado e swipe.
+// com animação em vez de rolar a página.
 export default function HomeDeck({ rodadas }: { rodadas: Rodada[] }) {
-  const reduce = useReducedMotion();
-  const [[i, dir], setSlide] = useState<[number, number]>([0, 0]);
-  const TOTAL = 3;
-
-  const go = (to: number) => {
-    const next = Math.max(0, Math.min(TOTAL - 1, to));
-    if (next !== i) setSlide([next, next > i ? 1 : -1]);
-  };
-
-  const variants = {
-    enter: (d: number) => ({ opacity: 0, x: reduce ? 0 : d * 60 }),
-    center: { opacity: 1, x: 0 },
-    exit: (d: number) => ({ opacity: 0, x: reduce ? 0 : d * -60 }),
-  };
-
-  return (
-    <div
-      className="h-full flex flex-col items-center justify-center px-5 outline-none"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "ArrowRight") go(i + 1);
-        if (e.key === "ArrowLeft") go(i - 1);
-      }}
-    >
-      <div className="relative w-full max-w-3xl flex-1 min-h-0 flex items-center justify-center">
-        <AnimatePresence mode="wait" custom={dir}>
-          <motion.section
-            key={i}
-            custom={dir}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            drag={reduce ? false : "x"}
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.15}
-            onDragEnd={(_, info) => {
-              if (info.offset.x < -80) go(i + 1);
-              else if (info.offset.x > 80) go(i - 1);
-            }}
-            className="w-full"
-          >
-            {i === 0 && <Hero />}
-            {i === 1 && <Como />}
-            {i === 2 && <Rodadas rodadas={rodadas} />}
-          </motion.section>
-        </AnimatePresence>
-
-        {/* Setas */}
-        {i > 0 && <Arrow side="left" onClick={() => go(i - 1)} />}
-        {i < TOTAL - 1 && <Arrow side="right" onClick={() => go(i + 1)} />}
-      </div>
-
-      {/* Bolinhas de navegação */}
-      <div className="flex items-center gap-2 py-4 shrink-0">
-        {Array.from({ length: TOTAL }).map((_, d) => (
-          <button
-            key={d}
-            aria-label={`Ir para a seção ${d + 1}`}
-            onClick={() => go(d)}
-            className={`h-2 rounded-full transition-all ${
-              d === i ? "w-6 bg-bronze" : "w-2 bg-line hover:bg-bronze/40"
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Arrow({ side, onClick }: { side: "left" | "right"; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label={side === "left" ? "Anterior" : "Próximo"}
-      className={`absolute top-1/2 -translate-y-1/2 ${
-        side === "left" ? "left-0 -ml-1 sm:-ml-4" : "right-0 -mr-1 sm:-mr-4"
-      } grid place-items-center w-12 h-12 rounded-full border border-line bg-surface/80 backdrop-blur text-bronze shadow-soft hover:border-bronze/40 hover:bg-bronze-chip/40 transition-colors`}
-    >
-      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        {side === "left" ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
-      </svg>
-    </button>
-  );
+  return <Deck slides={[<Hero key="hero" />, <Como key="como" />, <Rodadas key="rodadas" rodadas={rodadas} />]} />;
 }
 
 function Hero() {
@@ -125,7 +41,7 @@ function Hero() {
       <p className="text-ink2 mt-3 max-w-lg mx-auto leading-relaxed text-base sm:text-lg">
         A cada jogo do Brasil na Copa, a Dourê sorteia dois colares — um verde,
         um azul. Toda lista é trancada em público, e qualquer pessoa pode
-        conferir o resultado sozinha.
+        conferir o resultado por conta própria.
       </p>
       <p className="text-sm text-bronze mt-6 font-mono">deslize para ver como funciona →</p>
     </div>
@@ -166,7 +82,7 @@ function Rodadas({ rodadas }: { rodadas: Rodada[] }) {
       <div className="flex items-baseline justify-between mb-3">
         <h2 className="font-display text-3xl sm:text-4xl text-ink">Rodadas</h2>
         <Link href="/verificar" className="text-sm text-bronze hover:underline py-2">
-          Conferir manualmente →
+          Conferir outro sorteio →
         </Link>
       </div>
 

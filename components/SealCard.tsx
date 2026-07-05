@@ -25,11 +25,18 @@ export default function SealCard({
         <Scramble text={selo} />
       </p>
       {(totalParticipantes || seladoEm) && (
-        <p className="text-sm font-mono text-ink2 mt-3">
-          {totalParticipantes ? `${totalParticipantes} participantes` : ""}
-          {totalParticipantes && seladoEm ? " · " : ""}
-          {seladoEm ? new Date(seladoEm).toLocaleString("pt-BR") : ""}
-        </p>
+        <>
+          <p className="text-sm font-mono text-ink2 mt-3">
+            {totalParticipantes ? `${totalParticipantes} participantes` : ""}
+            {totalParticipantes && seladoEm ? " · " : ""}
+            {seladoEm ? new Date(seladoEm).toLocaleString("pt-BR") : ""}
+          </p>
+          {seladoEm && (
+            <p className="text-sm text-ink2/80 mt-0.5">
+              até o segundo — prova que a lista foi trancada antes do código sair
+            </p>
+          )}
+        </>
       )}
       <p className="text-sm text-ink2 mt-3 max-w-md mx-auto">{helper}</p>
     </div>

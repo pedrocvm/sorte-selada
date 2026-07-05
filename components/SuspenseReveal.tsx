@@ -186,7 +186,9 @@ export default function SuspenseReveal({
           </motion.div>
         )}
 
-        {fase === "travado" && (
+        {/* "N de M" só faz sentido quando há mais de um prêmio nesta sequência —
+            no palco individual da Dourê (um prêmio por vez) seria um "1 de 1" órfão. */}
+        {fase === "travado" && ganhadores.length > 1 && (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

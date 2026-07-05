@@ -1,13 +1,30 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 import { getAllRounds, roundPath, type Rodada } from "@/lib/rounds";
 
-// Sugere o próximo número de rodada, pra ferramenta preencher sozinha.
+// Sugere o próximo número de rodada e lista as publicadas, pra ferramenta se
+// preencher sozinha e o painel de gerenciamento poder oferecer exclusão.
 export async function GET() {
   const rounds = await getAllRounds();
   const proximo = rounds.length ? Math.max(...rounds.map((r) => r.numero)) + 1 : 1;
-  return NextResponse.json({ proximoNumero: proximo });
+  return NextResponse.json({
+    proximoNumero: proximo,
+    rodadas: rounds.map((r) => ({ numero: r.numero, jogo: r.jogo, data: r.data, ganhadores: r.ganhadores })),
+  });
+}
+
+// Apaga uma rodada publicada. Mesmo cookie de sessão do /sortear.
+export async function DELETE(req: NextRequest) {
+  const cookie = req.cookies.get("sorteio_session")?.value;
+  if (!process.env.SORTEIO_SESSION_SECRET || cookie !== process.env.SORTEIO_SESSION_SECRET) {
+    return NextResponse.json({ erro: "Não autorizado." }, { status: 401 });
+  }
+  const numero = Number(new URL(req.url).searchParams.get("numero"));
+  if (!numero) return NextResponse.json({ erro: "Número inválido." }, { status: 400 });
+
+  await del(roundPath(numero));
+  return NextResponse.json({ ok: true });
 }
 
 // Publica uma rodada no Vercel Blob. Só quem está logado na área /sortear

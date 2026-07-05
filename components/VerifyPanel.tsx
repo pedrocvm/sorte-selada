@@ -72,7 +72,7 @@ export default function VerifyPanel({
       <textarea
         value={listaTexto}
         onChange={(e) => setListaTexto(e.target.value)}
-        rows={6}
+        rows={4}
         className="w-full rounded-lg border border-line bg-cream px-3.5 py-3 font-mono text-base text-ink focus:outline-none focus:ring-2 focus:ring-bronze/40 resize-y"
         placeholder="cole a lista aqui..."
       />

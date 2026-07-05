@@ -11,6 +11,8 @@ import { Scramble } from "@/components/stage";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
+type RodadaResumo = { numero: number; jogo: string; data: string; ganhadores: string[] };
+
 const CORES = {
   verde: { hex: "#3E7A5C", soft: "rgba(62,122,92,0.16)", grad: "linear-gradient(135deg,#4C8A6A,#2C5A42)" },
   azul: { hex: "#3B5D8A", soft: "rgba(59,93,138,0.16)", grad: "linear-gradient(135deg,#4A6E9E,#2A4468)" },
@@ -28,9 +30,7 @@ export default function SortearTool() {
   const [numero, setNumero] = useState("1");
   const [data, setData] = useState(() => new Date().toISOString().slice(0, 10));
   const [jogo, setJogo] = useState("");
-  const [regra, setRegra] = useState(
-    "Código da sorte = soma das camisas dos 3 atacantes titulares na escalação oficial da CBF."
-  );
+  const [regra, setRegra] = useState("");
   const [nomeVerde, setNomeVerde] = useState("Colar Verde");
   const [nomeAzul, setNomeAzul] = useState("Colar Azul");
 
@@ -58,12 +58,35 @@ export default function SortearTool() {
   const [copiado, setCopiado] = useState(false);
   const [erro, setErro] = useState("");
 
-  useEffect(() => {
+  // rodadas já publicadas — pra sugerir o próximo número e permitir apagar
+  const [rodadasPublicadas, setRodadasPublicadas] = useState<RodadaResumo[]>([]);
+
+  function carregarRodadas() {
     fetch("/api/rodada")
       .then((r) => r.json())
-      .then((d) => d?.proximoNumero && setNumero(String(d.proximoNumero)))
+      .then((d) => {
+        if (d?.proximoNumero) setNumero(String(d.proximoNumero));
+        if (Array.isArray(d?.rodadas)) setRodadasPublicadas(d.rodadas);
+      })
       .catch(() => {});
+  }
+
+  useEffect(() => {
+    carregarRodadas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function apagarRodada(n: number) {
+    if (!confirm(`Apagar a rodada ${n}? A página pública dela deixa de existir.`)) return;
+    try {
+      const res = await fetch(`/api/rodada?numero=${n}`, { method: "DELETE" });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.erro || "Não deu pra apagar.");
+      setRodadasPublicadas((rs) => rs.filter((r) => r.numero !== n));
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não deu pra apagar.");
+    }
+  }
 
   const premios = [
     { cor: "verde" as const, nome: nomeVerde },
@@ -124,6 +147,7 @@ export default function SortearTool() {
       const d = await res.json();
       if (!res.ok) throw new Error(d?.erro || "Não deu pra publicar.");
       setLinkPublico(`${window.location.origin}/rodada/${numero}`);
+      carregarRodadas();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não deu pra publicar.");
     } finally {
@@ -208,8 +232,9 @@ export default function SortearTool() {
           >
             {slide === 0 && (
               <SlideDados
-                {...{ numero, setNumero, data, setData, jogo, setJogo, regra, setRegra, nomeVerde, setNomeVerde, nomeAzul, setNomeAzul, trancada }}
+                {...{ numero, setNumero, data, setData, jogo, setJogo, regra, setRegra, nomeVerde, setNomeVerde, nomeAzul, setNomeAzul, trancada, rodadasPublicadas }}
                 onNext={() => go(1)}
+                onApagar={apagarRodada}
               />
             )}
             {slide === 1 && (
@@ -309,6 +334,8 @@ function SlideDados(p: {
   nomeVerde: string; setNomeVerde: (v: string) => void;
   nomeAzul: string; setNomeAzul: (v: string) => void;
   trancada: boolean; onNext: () => void;
+  rodadasPublicadas: RodadaResumo[];
+  onApagar: (n: number) => void;
 }) {
   const dis = p.trancada;
   return (
@@ -321,13 +348,45 @@ function SlideDados(p: {
         <Campo label="Rodada nº" value={p.numero} onChange={(e) => p.setNumero(e.target.value)} disabled={dis} />
         <Campo label="Data" type="date" value={p.data} onChange={(e) => p.setData(e.target.value)} disabled={dis} />
         <Campo label="Jogo" className="col-span-2" placeholder="Brasil × Argentina" value={p.jogo} onChange={(e) => p.setJogo(e.target.value)} disabled={dis} />
-        <Campo label="Regra do código da sorte" className="col-span-2" value={p.regra} onChange={(e) => p.setRegra(e.target.value)} disabled={dis} />
-        <Campo label="Prêmio verde" value={p.nomeVerde} onChange={(e) => p.setNomeVerde(e.target.value)} disabled={dis} />
-        <Campo label="Prêmio azul" value={p.nomeAzul} onChange={(e) => p.setNomeAzul(e.target.value)} disabled={dis} />
+        <Campo
+          label="Regra do código da sorte"
+          className="col-span-2"
+          placeholder="Ex.: soma das camisas dos 3 atacantes titulares na escalação oficial da CBF"
+          value={p.regra}
+          onChange={(e) => p.setRegra(e.target.value)}
+          disabled={dis}
+        />
+        <Campo label="Prêmio 1" value={p.nomeVerde} onChange={(e) => p.setNomeVerde(e.target.value)} disabled={dis} />
+        <Campo label="Prêmio 2" value={p.nomeAzul} onChange={(e) => p.setNomeAzul(e.target.value)} disabled={dis} />
       </div>
       <div className="mt-5">
         <BotaoOuro onClick={p.onNext}>Continuar →</BotaoOuro>
       </div>
+
+      {p.rodadasPublicadas.length > 0 && (
+        <div className="mt-6 rounded-xl border border-line bg-surface/60 p-4">
+          <p className="text-sm font-mono uppercase tracking-[0.16em] text-bronze mb-2">
+            Rodadas publicadas
+          </p>
+          <ul className="space-y-1.5">
+            {p.rodadasPublicadas.map((r) => (
+              <li key={r.numero} className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-ink2 truncate">
+                  <span className="text-ink font-medium">Rodada {r.numero}</span>
+                  {r.jogo ? ` · ${r.jogo}` : ""}
+                </span>
+                <button
+                  onClick={() => p.onApagar(r.numero)}
+                  className="shrink-0 text-amber hover:underline py-1.5 px-1"
+                  aria-label={`Apagar rodada ${r.numero}`}
+                >
+                  🗑 Apagar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -572,7 +631,7 @@ function SlideSorteio(p: {
                       setTimeout(() => p.setCopiado(false), 2000);
                     }}
                   >
-                    {p.copiado ? "Link copiado ✓" : "Copiar link pro Instagram"}
+                    {p.copiado ? "Link copiado ✓" : "Copiar link para o Instagram"}
                   </BotaoOuro>
                 </motion.div>
               )}

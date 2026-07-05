@@ -16,9 +16,8 @@ export default function VerificarPage() {
             Confira qualquer sorteio
           </h1>
           <p className="text-ink2 mt-2 text-base max-w-md mx-auto leading-relaxed">
-            Cole a lista de participantes e o código da sorte que foram
-            anunciados no story. O resultado que aparecer aqui tem que ser
-            idêntico ao que a Dourê revelou.
+            O resultado que aparecer aqui tem que ser idêntico ao que a Dourê
+            revelou no story.
           </p>
         </header>
 

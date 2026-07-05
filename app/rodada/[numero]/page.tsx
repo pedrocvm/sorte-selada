@@ -32,26 +32,9 @@ export default async function RodadaPage({
   const rodada = await getRoundByNumero(Number(numero));
   if (!rodada) notFound();
 
-  const data = new Date(rodada.data + "T12:00:00").toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-2xl px-5 py-8">
-        <header className="text-center mb-8">
-          <p className="text-sm font-mono uppercase tracking-[0.24em] text-bronze">
-            Rodada {String(rodada.numero).padStart(2, "0")} · {data}
-          </p>
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl mt-1 gold-text pb-1">
-            {rodada.jogo}
-          </h1>
-        </header>
-
-        <RoundReveal rodada={rodada} />
-      </div>
+    <div className="h-full overflow-hidden">
+      <RoundReveal rodada={rodada} />
     </div>
   );
 }

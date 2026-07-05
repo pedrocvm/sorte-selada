@@ -86,13 +86,15 @@ export default function VerifyPanel({
         placeholder="ex.: 30"
       />
 
-      <button
+      <motion.button
         onClick={conferir}
         disabled={carregando}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.97 }}
         className="w-full mt-4 rounded-lg bg-bronze hover:bg-bronze-dark disabled:opacity-50 text-cream font-medium text-sm py-2.5 transition-colors"
       >
         {carregando ? "Conferindo…" : "Conferir"}
-      </button>
+      </motion.button>
 
       {resultado.status === "erro" && (
         <p className="mt-4 text-sm text-amber bg-amber/10 border border-amber/30 rounded-lg px-3 py-2.5">

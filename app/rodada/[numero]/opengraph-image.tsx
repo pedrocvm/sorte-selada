@@ -10,7 +10,7 @@ export default async function OpengraphImage({
   params: Promise<{ numero: string }>;
 }) {
   const { numero } = await params;
-  const rodada = getRoundByNumero(Number(numero));
+  const rodada = await getRoundByNumero(Number(numero));
 
   return new ImageResponse(
     (

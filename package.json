@@ -10,7 +10,9 @@
     "lacrar": "node scripts/lacrar.mjs"
   },
   "dependencies": {
+    "@vercel/blob": "^2.5.0",
     "framer-motion": "^11.5.4",
+    "lottie-react": "^2.4.1",
     "next": "^15.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

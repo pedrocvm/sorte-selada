@@ -31,21 +31,6 @@ const config: Config = {
       boxShadow: {
         soft: "0 1px 2px rgba(31,29,26,0.04), 0 8px 24px -8px rgba(31,29,26,0.08)",
       },
-      keyframes: {
-        glint: {
-          "0%": { opacity: "0", transform: "scale(0.6) rotate(0deg)" },
-          "35%": { opacity: "1", transform: "scale(1.05) rotate(8deg)" },
-          "100%": { opacity: "0", transform: "scale(1.3) rotate(14deg)" },
-        },
-        spinGem: {
-          "0%": { transform: "rotateX(-14deg) rotateY(0deg)" },
-          "100%": { transform: "rotateX(-14deg) rotateY(360deg)" },
-        },
-      },
-      animation: {
-        glint: "glint 600ms ease-out forwards",
-        spinGem: "spinGem 9s linear infinite",
-      },
     },
   },
   plugins: [],

@@ -23,6 +23,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
   title: "Sorte Selada · Dourê Semijoias",
   description:
     "Sorteio transparente e verificável da Dourê Semijoias, feito a cada jogo do Brasil na Copa. Confira você mesmo.",
@@ -33,9 +34,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR" className={`${display.variable} ${body.variable} ${mono.variable}`}>
-      <body className="min-h-screen flex flex-col font-sans antialiased">
+      <body className="h-[100dvh] flex flex-col font-sans antialiased overflow-hidden">
         <Nav />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 min-h-0 overflow-hidden">{children}</main>
         <Footer />
       </body>
     </html>

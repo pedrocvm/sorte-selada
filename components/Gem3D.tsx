@@ -1,66 +1,78 @@
-/** Diamante 3D real em CSS (octaedro de 8 faces com preserve-3d).
- *  Gira sozinho, respeita prefers-reduced-motion, sem WebGL. */
+"use client";
 
-// ponytail: geometria fixa de octaedro regular. base S=140 → apótema S/2, altura de face S·√3/2.
-const S = 140;
-const APO = S / 2; // 70
-const SLANT = Math.round((S * Math.sqrt(3)) / 2); // 121
-const TILT = 35.26; // 90° − diedro(54.74°): dobra a face vertical até o octaedro fechar
+import Lottie from "lottie-react";
+import raw from "@/public/diamond-rotation.json";
 
-const faces: { up: boolean; grad: string; transform: string }[] = [];
-for (let k = 0; k < 4; k++) {
-  const spin = k * 90;
-  // topo: triângulo apontando pra cima, pivô na base
-  faces.push({
-    up: true,
-    grad: `linear-gradient(${135 - k * 25}deg, #E4CB92 0%, #B0905B 45%, #7C6340 100%)`,
-    transform: `rotateY(${spin}deg) translateZ(${APO}px) rotateX(-${TILT}deg)`,
+// Rampa de ouro da Dourê (escuro → claro). As cores originais da animação
+// (ciano/azul/lavanda/branco) são remapeadas por ranking de luminância,
+// preservando o contraste entre as facetas.
+const RAMP = [
+  [0x6e, 0x58, 0x36],
+  [0x9c, 0x7e, 0x4a],
+  [0xc6, 0xa5, 0x66],
+  [0xef, 0xdc, 0xa8],
+];
+
+const lum = (r: number, g: number, b: number) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+function recolor(src: unknown) {
+  const data = JSON.parse(JSON.stringify(src));
+  const nodes: { k: number[] }[] = [];
+  const walk = (o: unknown) => {
+    if (Array.isArray(o)) return o.forEach(walk);
+    if (o && typeof o === "object") {
+      const node = o as Record<string, unknown>;
+      if (
+        (node.ty === "fl" || node.ty === "st") &&
+        node.c &&
+        Array.isArray((node.c as { k?: unknown }).k) &&
+        typeof (node.c as { k: number[] }).k[0] === "number"
+      ) {
+        nodes.push(node.c as { k: number[] });
+      }
+      Object.values(node).forEach(walk);
+    }
+  };
+  walk(data);
+
+  const key = (k: number[]) => k.slice(0, 3).map((x) => Math.round(x * 255)).join(",");
+  const distinct = [...new Set(nodes.map((c) => key(c.k)))]
+    .map((s) => s.split(",").map(Number))
+    .sort((a, b) => lum(a[0], a[1], a[2]) - lum(b[0], b[1], b[2]));
+
+  const map = new Map<string, number[]>();
+  distinct.forEach((rgb, i) => {
+    const g = RAMP[Math.round((i / Math.max(1, distinct.length - 1)) * (RAMP.length - 1))];
+    map.set(rgb.join(","), g);
   });
-  // fundo: triângulo apontando pra baixo, pivô no topo
-  faces.push({
-    up: false,
-    grad: `linear-gradient(${-45 + k * 25}deg, #8A6E45 0%, #5F4C31 55%, #3E301E 100%)`,
-    transform: `rotateY(${spin}deg) translateZ(${APO}px) rotateX(${TILT}deg)`,
+
+  nodes.forEach((c) => {
+    const g = map.get(key(c.k));
+    if (g) c.k = [g[0] / 255, g[1] / 255, g[2] / 255, c.k[3] ?? 1];
   });
+  return data;
 }
 
-export default function Gem3D() {
+const goldDiamond = recolor(raw);
+
+const SIZES = {
+  lg: { box: "h-64 sm:h-72", gem: "w-56 h-56 sm:w-64 sm:h-64" },
+  sm: { box: "h-16 sm:h-20", gem: "w-14 h-14 sm:w-16 sm:h-16" },
+};
+
+// tamanho "sm" existe pra reaproveitar a mesma peça (com a mesma identidade
+// visual da home) dentro do show de suspense, sem precisar de outro asset.
+export default function Gem3D({ size = "lg" }: { size?: "lg" | "sm" }) {
+  const s = SIZES[size];
   return (
-    <div
-      className="flex items-center justify-center h-64 sm:h-72"
-      style={{ perspective: 800 }}
-    >
-      <div
-        className="relative motion-safe:animate-spinGem"
-        style={{
-          width: S,
-          height: S,
-          transformStyle: "preserve-3d",
-          transform: "rotateX(-14deg) rotateY(-24deg)",
-          filter: "drop-shadow(0 14px 16px rgba(31,29,26,0.28))",
-        }}
-      >
-        {faces.map((f, i) => (
-          <span
-            key={i}
-            style={{
-              position: "absolute",
-              left: `calc(50% - ${APO}px)`,
-              top: f.up ? `calc(50% - ${SLANT}px)` : "50%",
-              width: S,
-              height: SLANT,
-              background: f.grad,
-              clipPath: f.up
-                ? "polygon(50% 0, 100% 100%, 0 100%)"
-                : "polygon(50% 100%, 0 0, 100% 0)",
-              transformOrigin: f.up ? "50% 100%" : "50% 0",
-              transform: f.transform,
-              backfaceVisibility: "hidden",
-            }}
-            aria-hidden
-          />
-        ))}
-      </div>
+    <div className={`flex items-center justify-center ${s.box}`}>
+      <Lottie
+        animationData={goldDiamond}
+        loop
+        autoplay
+        className={s.gem}
+        aria-hidden
+      />
     </div>
   );
 }

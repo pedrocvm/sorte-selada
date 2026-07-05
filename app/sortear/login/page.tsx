@@ -45,7 +45,7 @@ export default function LoginPage() {
         <div className="floaty">
           <Gem3D size="sm" />
         </div>
-        <h1 className="font-display text-2xl mt-2 gold-text pb-0.5">Área da Karol</h1>
+        <h1 className="font-display text-2xl mt-2 gold-text pb-0.5">Área da Dourê</h1>
         <p className="text-sm text-ink2 mt-1">
           Acesso restrito. Só quem faz os sorteios entra aqui.
         </p>

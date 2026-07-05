@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import Gem3D from "@/components/Gem3D";
+import GoldParticles from "@/components/GoldParticles";
 import RoundCard from "@/components/RoundCard";
 import type { Rodada } from "@/lib/rounds";
 
@@ -106,6 +107,7 @@ function Arrow({ side, onClick }: { side: "left" | "right"; onClick: () => void 
 function Hero() {
   return (
     <div className="relative text-center">
+      <GoldParticles count={14} />
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-6 -z-10 h-64 w-64 -translate-x-1/2 rounded-full blur-3xl glow-pulse"

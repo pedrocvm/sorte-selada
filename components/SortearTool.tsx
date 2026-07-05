@@ -1,20 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { normalizeList, sha256, pickWinners, type TrailStep } from "@/lib/draw";
-import SealCard from "@/components/SealCard";
-import WinnerCard from "@/components/WinnerCard";
 import SuspenseReveal from "@/components/SuspenseReveal";
+import Gem3D from "@/components/Gem3D";
+import DiamondFacetGlow from "@/components/DiamondFacetGlow";
+import GoldParticles, { GoldConfetti } from "@/components/GoldParticles";
 
-type Etapa = "editando" | "trancada" | "revelada";
+const EASE = [0.16, 1, 0.3, 1] as const;
 
+const CORES = {
+  verde: { hex: "#3E7A5C", soft: "rgba(62,122,92,0.16)", grad: "linear-gradient(135deg,#4C8A6A,#2C5A42)" },
+  azul: { hex: "#3B5D8A", soft: "rgba(59,93,138,0.16)", grad: "linear-gradient(135deg,#4A6E9E,#2A4468)" },
+};
+
+// Assistente do sorteio em formato de deck: 3 slides que cabem na primeira
+// dobra (Dados → Participantes → Sorteio). O sorteio é o palco principal:
+// cada prêmio é disparado individualmente e ganha seu próprio show.
 export default function SortearTool() {
-  const [etapa, setEtapa] = useState<Etapa>("editando");
+  const reduce = useReducedMotion();
+  const [[slide, dir], setSlideRaw] = useState<[number, number]>([0, 0]);
+  const go = (to: number) => setSlideRaw(([s]) => [to, to > s ? 1 : -1]);
 
-  // metadados da rodada
-  const [numero, setNumero] = useState("2");
-  const [data, setData] = useState("");
+  // dados da rodada
+  const [numero, setNumero] = useState("1");
+  const [data, setData] = useState(() => new Date().toISOString().slice(0, 10));
   const [jogo, setJogo] = useState("");
   const [regra, setRegra] = useState(
     "Código da sorte = soma das camisas dos 3 atacantes titulares na escalação oficial da CBF."
@@ -22,23 +33,27 @@ export default function SortearTool() {
   const [nomeVerde, setNomeVerde] = useState("Colar Verde");
   const [nomeAzul, setNomeAzul] = useState("Colar Azul");
 
-  // sorteio
+  // lista
   const [listaTexto, setListaTexto] = useState("");
   const [lista, setLista] = useState<string[]>([]);
   const [selo, setSelo] = useState("");
   const [seladoEm, setSeladoEm] = useState("");
+  const trancada = !!selo;
+
+  // sorteio
   const [codigo, setCodigo] = useState("");
+  const [codigoOk, setCodigoOk] = useState(false);
   const [ganhadores, setGanhadores] = useState<string[]>([]);
   const [trilha, setTrilha] = useState<TrailStep[]>([]);
-  const [erro, setErro] = useState("");
-  const [copiado, setCopiado] = useState(false);
+  const [mostrando, setMostrando] = useState<number | null>(null);
+  const [revelado, setRevelado] = useState<[boolean, boolean]>([false, false]);
 
-  // show + publicação
-  const [rodandoShow, setRodandoShow] = useState(false);
+  // publicação
   const [publicando, setPublicando] = useState(false);
   const [linkPublico, setLinkPublico] = useState("");
+  const [copiado, setCopiado] = useState(false);
+  const [erro, setErro] = useState("");
 
-  // sugere o próximo número de rodada sozinho
   useEffect(() => {
     fetch("/api/rodada")
       .then((r) => r.json())
@@ -50,6 +65,8 @@ export default function SortearTool() {
     { cor: "verde" as const, nome: nomeVerde },
     { cor: "azul" as const, nome: nomeAzul },
   ];
+  const participantes = normalizeList(listaTexto).length;
+  const ambosRevelados = revelado[0] && revelado[1];
 
   async function trancar() {
     const normalizada = normalizeList(listaTexto);
@@ -63,10 +80,10 @@ export default function SortearTool() {
     setListaTexto(normalizada.join("\n"));
     setSelo(s);
     setSeladoEm(new Date().toISOString());
-    setEtapa("trancada");
+    go(2);
   }
 
-  async function revelar() {
+  async function confirmarCodigo() {
     if (!codigo.trim()) {
       setErro("Digite o código da sorte.");
       return;
@@ -75,8 +92,7 @@ export default function SortearTool() {
     const { winners, trail } = await pickWinners(lista, selo, codigo.trim());
     setGanhadores(winners);
     setTrilha(trail);
-    setEtapa("revelada");
-    setRodandoShow(true); // dispara o show de suspense antes de mostrar os cards
+    setCodigoOk(true);
   }
 
   async function publicar() {
@@ -112,274 +128,440 @@ export default function SortearTool() {
   }
 
   function recomecar() {
-    if (etapa !== "editando" && !confirm("Recomeçar do zero? Isso limpa tudo desta rodada.")) return;
-    setEtapa("editando");
+    if (!confirm("Recomeçar do zero? Isso limpa tudo desta rodada.")) return;
+    setSlideRaw([0, -1]);
     setListaTexto("");
     setLista([]);
     setSelo("");
+    setSeladoEm("");
     setCodigo("");
+    setCodigoOk(false);
     setGanhadores([]);
     setTrilha([]);
-    setErro("");
-    setCopiado(false);
-    setRodandoShow(false);
+    setMostrando(null);
+    setRevelado([false, false]);
     setLinkPublico("");
+    setCopiado(false);
+    setErro("");
   }
 
-  const passoAtual = etapa === "editando" ? 0 : etapa === "trancada" ? 1 : 2;
+  const variants = {
+    enter: (d: number) => ({ opacity: 0, x: reduce ? 0 : d * 70 }),
+    center: { opacity: 1, x: 0 },
+    exit: (d: number) => ({ opacity: 0, x: reduce ? 0 : d * -70 }),
+  };
+
+  const passos = [
+    { rotulo: "Rodada", feito: slide > 0 },
+    { rotulo: "Participantes", feito: trancada },
+    { rotulo: "Sorteio", feito: ambosRevelados },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="h-full mx-auto w-full max-w-3xl flex flex-col px-5 py-3">
       {/* Progresso gamificado */}
-      <div className="flex items-center justify-center gap-2">
-        {["Lista", "Código", "Revelar"].map((rotulo, p) => {
-          const feito = p < passoAtual;
-          const ativo = p === passoAtual;
+      <div className="flex items-center justify-center gap-3 shrink-0 py-1.5">
+        {passos.map((p, i) => {
+          const ativo = i === slide;
           return (
-            <div key={rotulo} className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
+            <div key={p.rotulo} className="flex items-center gap-3">
+              <button
+                onClick={() => i < slide && go(i)}
+                disabled={i >= slide}
+                className="flex items-center gap-2 disabled:cursor-default"
+              >
                 <motion.span
-                  animate={{ scale: ativo ? [1, 1.12, 1] : 1 }}
+                  animate={{ scale: ativo && !reduce ? [1, 1.12, 1] : 1 }}
                   transition={{ repeat: ativo ? Infinity : 0, duration: 1.8 }}
-                  className={`grid place-items-center w-7 h-7 rounded-full text-xs font-display font-semibold ${
-                    feito || ativo ? "coin text-bronze-dark" : "bg-line text-ink2"
+                  className={`grid place-items-center w-9 h-9 rounded-full text-sm font-display font-semibold ${
+                    p.feito || ativo ? "coin text-bronze-dark" : "bg-line text-ink2"
                   }`}
                 >
-                  {feito ? "✓" : p + 1}
+                  {p.feito ? "✓" : i + 1}
                 </motion.span>
-                <span className={`text-xs font-medium ${ativo ? "text-ink" : "text-ink2"}`}>{rotulo}</span>
-              </div>
-              {p < 2 && (
-                <span className={`h-px w-5 ${feito ? "bg-bronze" : "bg-line"} transition-colors`} />
-              )}
+                <span className={`text-sm font-medium ${ativo ? "text-ink" : "text-ink2"}`}>
+                  {p.rotulo}
+                </span>
+              </button>
+              {i < 2 && <span className={`h-px w-8 ${p.feito ? "bg-bronze" : "bg-line"} transition-colors`} />}
             </div>
           );
         })}
       </div>
 
-      {/* Metadados da rodada */}
-      <div className="rounded-card border border-line bg-surface shadow-soft p-5 space-y-3">
-        <p className="font-display text-lg text-ink">Dados da rodada</p>
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs text-ink2 mb-1">Número da rodada</label>
-            <input
-              value={numero}
-              onChange={(e) => setNumero(e.target.value)}
-              disabled={etapa !== "editando"}
-              className="w-full rounded-lg border border-line bg-cream px-3 py-2 text-sm disabled:opacity-60"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-ink2 mb-1">Data</label>
-            <input
-              type="date"
-              value={data}
-              onChange={(e) => setData(e.target.value)}
-              disabled={etapa !== "editando"}
-              className="w-full rounded-lg border border-line bg-cream px-3 py-2 text-sm disabled:opacity-60"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-xs text-ink2 mb-1">Jogo</label>
-          <input
-            value={jogo}
-            onChange={(e) => setJogo(e.target.value)}
-            disabled={etapa !== "editando"}
-            placeholder="ex.: Brasil × Argentina"
-            className="w-full rounded-lg border border-line bg-cream px-3 py-2 text-sm disabled:opacity-60"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-ink2 mb-1">Regra do código da sorte</label>
-          <input
-            value={regra}
-            onChange={(e) => setRegra(e.target.value)}
-            disabled={etapa !== "editando"}
-            className="w-full rounded-lg border border-line bg-cream px-3 py-2 text-sm disabled:opacity-60"
-          />
-        </div>
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs text-ink2 mb-1">Nome do prêmio verde</label>
-            <input
-              value={nomeVerde}
-              onChange={(e) => setNomeVerde(e.target.value)}
-              disabled={etapa !== "editando"}
-              className="w-full rounded-lg border border-line bg-cream px-3 py-2 text-sm disabled:opacity-60"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-ink2 mb-1">Nome do prêmio azul</label>
-            <input
-              value={nomeAzul}
-              onChange={(e) => setNomeAzul(e.target.value)}
-              disabled={etapa !== "editando"}
-              className="w-full rounded-lg border border-line bg-cream px-3 py-2 text-sm disabled:opacity-60"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Passo 1 — lista */}
-      <div className="rounded-card border border-line bg-surface shadow-soft p-5">
-        <p className="font-display text-lg text-ink mb-1">1. Participantes</p>
-        <p className="text-xs text-ink2 mb-3">Um nome por linha. Repetidos são unidos sozinhos.</p>
-        <textarea
-          value={listaTexto}
-          onChange={(e) => setListaTexto(e.target.value)}
-          disabled={etapa !== "editando"}
-          rows={8}
-          className="w-full rounded-lg border border-line bg-cream px-3 py-2.5 font-mono text-[13px] disabled:opacity-70 resize-y"
-          placeholder="@maria.silva&#10;@joao_p&#10;@carla.designs"
-        />
-        {etapa === "editando" && (
-          <motion.button
-            onClick={trancar}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.97 }}
-            className="w-full mt-3 rounded-lg bg-bronze hover:bg-bronze-dark text-cream font-medium text-sm py-2.5 transition-colors"
+      {/* Slides */}
+      <div className="relative flex-1 min-h-0 flex items-center justify-center">
+        <AnimatePresence mode="wait" custom={dir}>
+          <motion.section
+            key={slide}
+            custom={dir}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.4, ease: EASE }}
+            className="w-full max-h-full overflow-y-auto"
           >
-            Trancar a lista
-          </motion.button>
-        )}
+            {slide === 0 && (
+              <SlideDados
+                {...{ numero, setNumero, data, setData, jogo, setJogo, regra, setRegra, nomeVerde, setNomeVerde, nomeAzul, setNomeAzul, trancada }}
+                onNext={() => go(1)}
+              />
+            )}
+            {slide === 1 && (
+              <SlideLista
+                {...{ listaTexto, setListaTexto, trancada, participantes, selo }}
+                onLock={trancar}
+                onNext={() => go(2)}
+              />
+            )}
+            {slide === 2 && (
+              <SlideSorteio
+                {...{ selo, lista, codigo, setCodigo, codigoOk, confirmarCodigo, premios, ganhadores, mostrando, setMostrando, revelado, setRevelado, ambosRevelados, publicar, publicando, linkPublico, copiado, setCopiado }}
+              />
+            )}
+          </motion.section>
+        </AnimatePresence>
       </div>
 
-      {/* Selo */}
-      {etapa !== "editando" && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <SealCard selo={selo} totalParticipantes={lista.length} seladoEm={seladoEm} />
-        </motion.div>
-      )}
-
-      {/* Passo 2 — código da sorte */}
-      {etapa !== "editando" && (
-        <div className="rounded-card border border-line bg-surface shadow-soft p-5">
-          <p className="font-display text-lg text-ink mb-1">2. Código da sorte</p>
-          <p className="text-xs text-ink2 mb-3">
-            Já anunciado no story antes de você digitar aqui.
-          </p>
-          <input
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
-            disabled={etapa === "revelada"}
-            placeholder="ex.: 30"
-            className="w-full rounded-lg border border-line bg-cream px-3 py-2.5 text-sm disabled:opacity-70"
-          />
-          {etapa === "trancada" && (
-            <motion.button
-              onClick={revelar}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.97 }}
-              className="w-full mt-3 rounded-lg bg-bronze hover:bg-bronze-dark text-cream font-medium text-sm py-2.5 transition-colors"
+      {/* Erro + recomeçar */}
+      <div className="shrink-0 flex items-center justify-between gap-3 pt-1.5 min-h-[30px]">
+        <AnimatePresence>
+          {erro && (
+            <motion.p
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: reduce ? 0 : [0, -6, 6, -4, 4, 0] }}
+              exit={{ opacity: 0 }}
+              className="text-sm text-amber bg-amber/10 border border-amber/30 rounded-lg px-3 py-1.5"
             >
-              Revelar os ganhadores
-            </motion.button>
+              {erro}
+            </motion.p>
           )}
+        </AnimatePresence>
+        <button onClick={recomecar} className="ml-auto text-xs text-ink2 hover:text-ink transition-colors">
+          ↺ Recomeçar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Peças reutilizáveis ── */
+
+function Campo({
+  label,
+  className = "",
+  ...props
+}: { label: string; className?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="block text-[11px] font-mono uppercase tracking-[0.16em] text-bronze mb-1.5">
+        {label}
+      </span>
+      <input
+        {...props}
+        className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-bronze/50 focus:border-bronze/60 focus:-translate-y-0.5 focus:shadow-md hover:border-bronze/30 disabled:opacity-60 disabled:hover:border-line"
+      />
+    </label>
+  );
+}
+
+function BotaoOuro({
+  children,
+  ...props
+}: React.ComponentProps<typeof motion.button>) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.015 }}
+      whileTap={{ scale: 0.97 }}
+      {...props}
+      className="w-full rounded-xl py-3.5 text-base font-semibold text-cream shadow-lg transition-opacity disabled:opacity-50"
+      style={{
+        background: "linear-gradient(120deg,#5F4C31,#876B45 40%,#C6A566 50%,#876B45 60%,#5F4C31)",
+        backgroundSize: "200% auto",
+        boxShadow: "0 6px 20px -6px rgba(135,107,69,0.6)",
+      }}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+function Kicker({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[11px] font-mono uppercase tracking-[0.26em] text-bronze text-center">
+      {children}
+    </p>
+  );
+}
+
+/* ── Slide 1: dados ── */
+
+function SlideDados(p: {
+  numero: string; setNumero: (v: string) => void;
+  data: string; setData: (v: string) => void;
+  jogo: string; setJogo: (v: string) => void;
+  regra: string; setRegra: (v: string) => void;
+  nomeVerde: string; setNomeVerde: (v: string) => void;
+  nomeAzul: string; setNomeAzul: (v: string) => void;
+  trancada: boolean; onNext: () => void;
+}) {
+  const dis = p.trancada;
+  return (
+    <div className="mx-auto max-w-xl">
+      <Kicker>Área da Dourê</Kicker>
+      <h1 className="font-display text-3xl sm:text-4xl gold-text text-center pb-1 mt-1">
+        Dados da rodada
+      </h1>
+      <div className="mt-5 grid grid-cols-2 gap-3.5">
+        <Campo label="Rodada nº" value={p.numero} onChange={(e) => p.setNumero(e.target.value)} disabled={dis} />
+        <Campo label="Data" type="date" value={p.data} onChange={(e) => p.setData(e.target.value)} disabled={dis} />
+        <Campo label="Jogo" className="col-span-2" placeholder="Brasil × Argentina" value={p.jogo} onChange={(e) => p.setJogo(e.target.value)} disabled={dis} />
+        <Campo label="Regra do código da sorte" className="col-span-2" value={p.regra} onChange={(e) => p.setRegra(e.target.value)} disabled={dis} />
+        <Campo label="Prêmio verde" value={p.nomeVerde} onChange={(e) => p.setNomeVerde(e.target.value)} disabled={dis} />
+        <Campo label="Prêmio azul" value={p.nomeAzul} onChange={(e) => p.setNomeAzul(e.target.value)} disabled={dis} />
+      </div>
+      <div className="mt-5">
+        <BotaoOuro onClick={p.onNext}>Continuar →</BotaoOuro>
+      </div>
+    </div>
+  );
+}
+
+/* ── Slide 2: participantes ── */
+
+function SlideLista(p: {
+  listaTexto: string; setListaTexto: (v: string) => void;
+  trancada: boolean; participantes: number; selo: string;
+  onLock: () => void; onNext: () => void;
+}) {
+  return (
+    <div className="mx-auto max-w-xl">
+      <Kicker>Um nome por linha · repetidos são unidos sozinhos</Kicker>
+      <h1 className="font-display text-3xl sm:text-4xl gold-text text-center pb-1 mt-1">
+        Quem está concorrendo?
+      </h1>
+      <div className="relative mt-5">
+        <textarea
+          value={p.listaTexto}
+          onChange={(e) => p.setListaTexto(e.target.value)}
+          disabled={p.trancada}
+          rows={9}
+          className="w-full rounded-xl border border-line bg-surface px-4 py-3 font-mono text-sm text-ink shadow-sm resize-none transition-all focus:outline-none focus:ring-2 focus:ring-bronze/50 focus:border-bronze/60 hover:border-bronze/30 disabled:opacity-70"
+          placeholder={"@maria.silva\n@joao_p\n@carla.designs"}
+        />
+        <AnimatePresence>
+          {p.participantes > 0 && (
+            <motion.span
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              key={p.participantes}
+              className="absolute -top-2.5 right-3 coin px-3 py-1 rounded-full text-xs font-semibold text-bronze-dark"
+            >
+              {p.participantes} {p.participantes === 1 ? "participante" : "participantes"}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {p.trancada ? (
+        <div className="mt-4 space-y-3">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border border-dashed border-bronze/50 bg-bronze-chip/40 px-4 py-3 text-center"
+          >
+            <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-bronze">
+              Lista trancada 🔒
+            </p>
+            <p className="font-mono text-xs text-ink mt-1 break-all">{p.selo}</p>
+          </motion.div>
+          <BotaoOuro onClick={p.onNext}>Ir pro sorteio →</BotaoOuro>
+        </div>
+      ) : (
+        <div className="mt-4">
+          <BotaoOuro onClick={p.onLock}>🔒 Trancar a lista</BotaoOuro>
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* O show de suspense — roda ao vivo antes de revelar os cards */}
-      <AnimatePresence>
-        {etapa === "revelada" && rodandoShow && (
-          <SuspenseReveal
-            lista={lista}
-            ganhadores={ganhadores}
-            premios={premios}
-            onDone={() => setRodandoShow(false)}
-          />
+/* ── Slide 3: o palco do sorteio ── */
+
+function SlideSorteio(p: {
+  selo: string; lista: string[];
+  codigo: string; setCodigo: (v: string) => void;
+  codigoOk: boolean; confirmarCodigo: () => void;
+  premios: { cor: "verde" | "azul"; nome: string }[];
+  ganhadores: string[];
+  mostrando: number | null; setMostrando: (v: number | null) => void;
+  revelado: [boolean, boolean]; setRevelado: (v: [boolean, boolean]) => void;
+  ambosRevelados: boolean;
+  publicar: () => void; publicando: boolean;
+  linkPublico: string; copiado: boolean; setCopiado: (v: boolean) => void;
+}) {
+  const reduce = useReducedMotion();
+  return (
+    <div className="relative overflow-hidden rounded-card border border-bronze/25 bg-ink text-cream shadow-soft p-5 sm:p-6">
+      {/* poeira de ouro subindo no palco */}
+      <GoldParticles count={16} />
+      {/* estouro de confete quando os dois prêmios saem */}
+      {p.ambosRevelados && p.mostrando === null && <GoldConfetti />}
+
+      <div className="relative z-10">
+        <div className="flex items-center justify-center gap-2 text-[11px] font-mono text-cream/60">
+          <span className="uppercase tracking-[0.2em] text-bronze-chip">Lista trancada</span>
+          <span className="text-cream/40">·</span>
+          <span>{p.lista.length} participantes</span>
+          <span className="text-cream/40">·</span>
+          <span title={p.selo}>{p.selo.slice(0, 12)}…</span>
+        </div>
+
+        {/* Código da sorte */}
+        {!p.codigoOk ? (
+          <div className="mt-4 mx-auto max-w-sm text-center">
+            <p className="font-display text-2xl gold-text pb-1">Código da sorte</p>
+            <input
+              value={p.codigo}
+              onChange={(e) => p.setCodigo(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && p.confirmarCodigo()}
+              placeholder="ex.: 30"
+              autoFocus
+              className="mt-3 w-full rounded-xl border border-bronze/40 bg-cream/10 px-4 py-3.5 text-center font-display text-3xl text-cream placeholder:text-cream/30 focus:outline-none focus:ring-2 focus:ring-bronze/60 transition-all"
+            />
+            <div className="mt-3">
+              <BotaoOuro onClick={p.confirmarCodigo}>Confirmar código ✦</BotaoOuro>
+            </div>
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mt-3 flex items-center justify-center gap-2"
+          >
+            <span className="coin grid place-items-center w-8 h-8 rounded-full font-display font-semibold text-bronze-dark text-sm">
+              ✦
+            </span>
+            <span className="font-mono text-sm text-cream/80">código da sorte:</span>
+            <span className="font-display text-2xl text-bronze-chip">{p.codigo}</span>
+          </motion.div>
         )}
-      </AnimatePresence>
 
-      {/* Ganhadores — aparecem depois do show */}
-      {etapa === "revelada" && !rodandoShow && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid sm:grid-cols-2 gap-3"
-        >
-          <WinnerCard cor="verde" nomePremio={nomeVerde} ganhador={ganhadores[0]} delay={0.1} />
-          <WinnerCard cor="azul" nomePremio={nomeAzul} ganhador={ganhadores[1]} delay={0.35} />
-        </motion.div>
-      )}
-
-      {etapa === "revelada" && !rodandoShow && (
-        <button
-          onClick={() => setRodandoShow(true)}
-          className="w-full rounded-lg border border-line text-ink2 hover:text-ink text-sm py-2 transition-colors"
-        >
-          ↺ Rever o sorteio
-        </button>
-      )}
-
-      {/* Publicar — um botão, um link, pronto pro Instagram */}
-      {etapa === "revelada" && !rodandoShow && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="rounded-card border border-line bg-surface shadow-soft p-5"
-        >
-          <p className="font-display text-lg text-ink mb-1">3. Publicar</p>
-          <p className="text-xs text-ink2 mb-3 leading-relaxed">
-            Um clique gera a página pública com o mesmo show. Copie o link e cole no story
-            ou na bio do Instagram — qualquer pessoa pode abrir e conferir.
-          </p>
-
-          {!linkPublico ? (
-            <motion.button
-              onClick={publicar}
-              disabled={publicando}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.97 }}
-              className="w-full rounded-lg bg-bronze hover:bg-bronze-dark text-cream font-medium text-sm py-2.5 transition-colors disabled:opacity-60"
-            >
-              {publicando ? "Publicando…" : "Publicar página da rodada"}
-            </motion.button>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-2"
-            >
-              <div className="flex items-center gap-2 rounded-lg border border-line bg-cream px-3 py-2.5">
-                <span className="flex-1 truncate font-mono text-[13px] text-ink">{linkPublico}</span>
-                <a href={linkPublico} target="_blank" rel="noreferrer" className="text-bronze text-xs hover:underline">
-                  abrir ↗
-                </a>
-              </div>
-              <motion.button
-                onClick={() => {
-                  navigator.clipboard.writeText(linkPublico);
-                  setCopiado(true);
-                  setTimeout(() => setCopiado(false), 2000);
-                }}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full rounded-lg bg-bronze hover:bg-bronze-dark text-cream font-medium text-sm py-2.5 transition-colors"
+        {/* Palco: show rodando OU pedestais dos prêmios */}
+        <div className="mt-4">
+          <AnimatePresence mode="wait">
+            {p.mostrando !== null ? (
+              <motion.div key={`show-${p.mostrando}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <SuspenseReveal
+                  lista={p.lista}
+                  ganhadores={[p.ganhadores[p.mostrando]]}
+                  premios={[p.premios[p.mostrando]]}
+                  onDone={() => {
+                    const idx = p.mostrando!;
+                    p.setRevelado(idx === 0 ? [true, p.revelado[1]] : [p.revelado[0], true]);
+                    p.setMostrando(null);
+                  }}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="pedestais"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="grid grid-cols-2 gap-3.5"
+                style={{ perspective: 900 }}
               >
-                {copiado ? "Link copiado ✓" : "Copiar link pro Instagram"}
-              </motion.button>
+                {p.premios.map((premio, i) => {
+                  const c = CORES[premio.cor];
+                  const done = p.revelado[i];
+                  return (
+                    <div
+                      key={premio.cor}
+                      className="rounded-card border p-4 text-center"
+                      style={{ borderColor: `${c.hex}55`, background: c.soft }}
+                    >
+                      <p className="text-[11px] font-mono uppercase tracking-[0.18em]" style={{ color: c.hex === "#3E7A5C" ? "#8FC4A8" : "#9FB8DA" }}>
+                        {premio.nome}
+                      </p>
+                      {done ? (
+                        <motion.div
+                          initial={{ rotateY: reduce ? 0 : 90, opacity: 0 }}
+                          animate={{ rotateY: 0, opacity: 1 }}
+                          transition={{ type: "spring", stiffness: 120, damping: 14 }}
+                          style={{ transformStyle: "preserve-3d" }}
+                          className="mt-1"
+                        >
+                          <Gem3D size="sm" />
+                          <p className="font-display text-xl sm:text-2xl text-cream flex items-center justify-center gap-1.5 -mt-1">
+                            @{p.ganhadores[i]}
+                            <DiamondFacetGlow pulse color={c.hex} />
+                          </p>
+                        </motion.div>
+                      ) : (
+                        <motion.button
+                          onClick={() => p.setMostrando(i)}
+                          disabled={!p.codigoOk || p.mostrando !== null}
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.95 }}
+                          animate={
+                            p.codigoOk && !reduce
+                              ? { boxShadow: [`0 0 0px ${c.hex}00`, `0 0 26px ${c.hex}88`, `0 0 0px ${c.hex}00`] }
+                              : {}
+                          }
+                          transition={{ repeat: Infinity, duration: 2 }}
+                          className="mt-4 mb-2 w-full rounded-xl py-4 text-base font-semibold text-cream disabled:opacity-40"
+                          style={{ background: c.grad }}
+                        >
+                          ✦ Sortear
+                        </motion.button>
+                      )}
+                    </div>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Publicar — aparece quando os dois prêmios foram revelados */}
+        <AnimatePresence>
+          {p.ambosRevelados && p.mostrando === null && (
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, ease: EASE }}
+              className="mt-4"
+            >
+              {!p.linkPublico ? (
+                <BotaoOuro onClick={p.publicar} disabled={p.publicando}>
+                  {p.publicando ? "Publicando…" : "Publicar página da rodada ✦"}
+                </BotaoOuro>
+              ) : (
+                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+                  <div className="flex items-center gap-2 rounded-xl border border-bronze/40 bg-cream/10 px-4 py-3">
+                    <span className="flex-1 truncate font-mono text-sm text-cream">{p.linkPublico}</span>
+                    <a href={p.linkPublico} target="_blank" rel="noreferrer" className="text-bronze-chip text-xs hover:underline shrink-0">
+                      abrir ↗
+                    </a>
+                  </div>
+                  <BotaoOuro
+                    onClick={() => {
+                      navigator.clipboard.writeText(p.linkPublico);
+                      p.setCopiado(true);
+                      setTimeout(() => p.setCopiado(false), 2000);
+                    }}
+                  >
+                    {p.copiado ? "Link copiado ✓" : "Copiar link pro Instagram"}
+                  </BotaoOuro>
+                </motion.div>
+              )}
             </motion.div>
           )}
-        </motion.div>
-      )}
-
-      {erro && (
-        <p className="text-sm text-amber bg-amber/10 border border-amber/30 rounded-lg px-3 py-2.5">
-          {erro}
-        </p>
-      )}
-
-      {etapa !== "editando" && (
-        <button
-          onClick={recomecar}
-          className="w-full rounded-lg border border-line text-ink2 hover:text-ink text-sm py-2.5 transition-colors"
-        >
-          Recomeçar sorteio
-        </button>
-      )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

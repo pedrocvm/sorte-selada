@@ -17,8 +17,8 @@ export default function Nav() {
           </Link>
           <Link
             href="/sortear"
-            aria-label="Área da Karol"
-            title="Área da Karol"
+            aria-label="Área da Dourê"
+            title="Área da Dourê"
             className="grid place-items-center w-8 h-8 rounded-full border border-line text-bronze hover:text-bronze-dark hover:border-bronze/40 hover:bg-bronze-chip/40 transition-colors"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

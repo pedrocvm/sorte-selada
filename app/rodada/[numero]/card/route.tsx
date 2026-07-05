@@ -73,12 +73,20 @@ export async function GET(
                   borderRadius: 32,
                   border: `2px solid ${cor}`,
                   backgroundColor: "rgba(250,249,247,0.05)",
+                  maxWidth: 880,
                 }}
               >
                 <span style={{ fontSize: 28, letterSpacing: 6, textTransform: "uppercase", color: cor }}>
                   {premio.nome}
                 </span>
-                <span style={{ fontSize: 88, marginTop: 10 }}>{`@${ganhador}`}</span>
+                <span
+                  style={{
+                    fontSize: ganhador.length > 20 ? 48 : ganhador.length > 14 ? 64 : 88,
+                    marginTop: 10,
+                    textAlign: "center",
+                    wordBreak: "break-all",
+                  }}
+                >{`@${ganhador}`}</span>
               </div>
             )
         )}

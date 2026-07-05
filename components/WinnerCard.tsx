@@ -57,7 +57,7 @@ export default function WinnerCard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay, ease: "easeOut" }}
         style={reduce ? undefined : { rotateX: rotX, rotateY: rotY, transformStyle: "preserve-3d" }}
-        className="relative overflow-hidden rounded-card border border-line bg-surface shadow-soft p-6 flex items-center gap-4"
+        className="relative overflow-hidden rounded-card border border-line bg-surface shadow-soft p-6 flex items-center gap-4 min-w-0"
       >
         {/* brilho especular que segue o mouse */}
         {!reduce && (
@@ -80,7 +80,7 @@ export default function WinnerCard({
           >
             {nomePremio}
           </p>
-          <p className="font-display text-3xl lg:text-4xl text-ink mt-1 flex items-center gap-2 whitespace-nowrap">
+          <p className="font-display text-2xl sm:text-3xl lg:text-4xl text-ink mt-1 flex flex-wrap items-center gap-2 break-all">
             @{ganhador}
             <DiamondFacetGlow pulse={pulse} color={hex} />
           </p>

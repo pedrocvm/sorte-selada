@@ -1,0 +1,9 @@
+Coloque aqui o arquivo da logo real da Dourê (ex.: logo-doure.svg) quando tiver o arquivo em mãos.
+
+Por enquanto, o site usa uma marca-texto (wordmark) em CSS que imita a logo real:
+"Dourê ◆ semijoias" — serifada, com o diamante separando as duas palavras,
+igual à logo descrita no briefing de identidade.
+
+Trocar pelo arquivo real:
+1. Salve o arquivo em /public/logo-doure.svg (ou .png)
+2. Em components/Nav.tsx, troque o bloco <Link href="/"> pelo <Image src="/logo-doure.svg" ... />

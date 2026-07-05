@@ -1,0 +1,57 @@
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { getAllRounds, getRoundByNumero } from "@/lib/rounds";
+import RoundReveal from "@/components/RoundReveal";
+
+export function generateStaticParams() {
+  return getAllRounds().map((r) => ({ numero: String(r.numero) }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ numero: string }>;
+}): Promise<Metadata> {
+  const { numero } = await params;
+  const rodada = getRoundByNumero(Number(numero));
+  if (!rodada) return {};
+  return {
+    title: `Rodada ${rodada.numero} · Sorte Selada · Dourê Semijoias`,
+    description: `Confira a prova da rodada ${rodada.numero}: ${rodada.jogo}. Lista trancada, código público, resultado verificável por qualquer pessoa.`,
+    openGraph: {
+      title: `Sorte Selada · Rodada ${rodada.numero}`,
+      description: rodada.jogo,
+    },
+  };
+}
+
+export default async function RodadaPage({
+  params,
+}: {
+  params: Promise<{ numero: string }>;
+}) {
+  const { numero } = await params;
+  const rodada = getRoundByNumero(Number(numero));
+  if (!rodada) notFound();
+
+  const data = new Date(rodada.data + "T12:00:00").toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
+  return (
+    <div className="mx-auto max-w-2xl px-5 py-10 sm:py-14">
+      <header className="text-center mb-10">
+        <p className="text-[11px] font-mono uppercase tracking-[0.24em] text-bronze">
+          Rodada {String(rodada.numero).padStart(2, "0")} · {data}
+        </p>
+        <h1 className="font-display text-3xl sm:text-4xl text-ink mt-2">
+          {rodada.jogo}
+        </h1>
+      </header>
+
+      <RoundReveal rodada={rodada} />
+    </div>
+  );
+}

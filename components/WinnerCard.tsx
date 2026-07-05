@@ -80,7 +80,7 @@ export default function WinnerCard({
           >
             {nomePremio}
           </p>
-          <p className="font-display text-3xl lg:text-4xl text-ink mt-1 flex items-center gap-2 break-all">
+          <p className="font-display text-3xl lg:text-4xl text-ink mt-1 flex items-center gap-2 whitespace-nowrap">
             @{ganhador}
             <DiamondFacetGlow pulse={pulse} color={hex} />
           </p>

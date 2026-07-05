@@ -351,7 +351,7 @@ function SlideDados(p: {
         <Campo
           label="Regra do código da sorte"
           className="col-span-2"
-          placeholder="Ex.: soma das camisas dos 3 atacantes titulares na escalação oficial da CBF"
+          placeholder="Ex.: Insira a regra do código da sorte"
           value={p.regra}
           onChange={(e) => p.setRegra(e.target.value)}
           disabled={dis}

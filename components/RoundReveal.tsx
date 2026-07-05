@@ -68,7 +68,7 @@ function SlideRevelacao({
   const premio2 = rodada.premios[1];
 
   return (
-    <div className="mx-auto max-w-xl">
+    <div className="mx-auto max-w-2xl">
       <AnimatePresence mode="wait">
         {show ? (
           <SuspenseReveal
@@ -85,7 +85,7 @@ function SlideRevelacao({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-3"
           >
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid gap-3">
               {premio1 && (
                 <WinnerCard cor={premio1.cor} nomePremio={premio1.nome} ganhador={rodada.ganhadores[0]} delay={0.1} />
               )}

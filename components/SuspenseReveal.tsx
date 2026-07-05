@@ -158,7 +158,7 @@ export default function SuspenseReveal({
                   ? { type: "spring", stiffness: 260, damping: 11 } // o nome "quica" antes de fixar
                   : { duration: 0.12, ease: "easeOut" }
               }
-              className="font-display text-4xl sm:text-6xl lg:text-7xl px-4 max-w-full truncate"
+              className="font-display text-3xl sm:text-5xl lg:text-6xl px-4 max-w-full whitespace-nowrap"
               style={{ color: fase === "travado" ? paleta.hex : "#FAF9F7" }}
             >
               @{display}

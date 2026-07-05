@@ -27,7 +27,7 @@ Abre em `http://localhost:3000`.
 Local: copie `.env.local.example` para `.env.local`. No Vercel: **Project
 Settings → Environment Variables**. As três variáveis:
 
-- `SITE_URL` — a URL final do site, ex. `https://sorte-selada.vercel.app`
+- `SITE_URL` — a URL final do site, ex. `https://sorteselada.cenlo.pt`
   (usada para montar os links de compartilhamento / Open Graph).
 - `SORTEIO_SENHA` — a senha que você digita para entrar em `/sortear`.
 - `SORTEIO_SESSION_SECRET` — qualquer texto aleatório longo (é o valor do
@@ -44,8 +44,8 @@ inacessível — de propósito, por segurança nunca libera sem elas.
    e importe esse repositório.
 3. Não precisa configurar nada — a Vercel detecta que é Next.js sozinha.
    Clique em **Deploy**.
-4. Pronto: você recebe uma URL pública (ex. `sorteio-doure.vercel.app`).
-   Pode trocar por um domínio próprio depois, se quiser.
+4. Pronto: você recebe uma URL pública. O site roda em
+   `https://sorteselada.cenlo.pt`.
 
 Toda vez que você fizer `git push` com uma rodada nova, o site atualiza
 sozinho — não precisa repetir o passo 2 e 3.
@@ -54,7 +54,7 @@ sozinho — não precisa repetir o passo 2 e 3.
 
 O caminho normal, direto do navegador:
 
-1. Acesse `SUA-URL.vercel.app/sortear` e faça login com a `SORTEIO_SENHA`.
+1. Acesse `https://sorteselada.cenlo.pt/sortear` e faça login com a `SORTEIO_SENHA`.
 2. Preencha os dados da rodada (número, data, jogo, regra, nomes dos
    prêmios), cole a lista de participantes e clique em **Trancar a lista**.
    *(É esse o momento que a Karol grava e posta no story — a impressão

@@ -13,7 +13,7 @@ export default function RoundCard({ rodada }: { rodada: Rodada }) {
       className="block rounded-card border border-line bg-surface shadow-soft p-5 hover:border-bronze/40 hover:-translate-y-0.5 hover:shadow-md transition-all group"
     >
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-bronze">
+        <p className="text-sm font-mono uppercase tracking-[0.16em] text-bronze">
           Rodada {String(rodada.numero).padStart(2, "0")} · {data}
         </p>
         <span className="flex gap-1" aria-hidden="true">
@@ -25,7 +25,7 @@ export default function RoundCard({ rodada }: { rodada: Rodada }) {
       <p className="text-sm text-ink2 mt-1">
         Ganhadores: {rodada.ganhadores.map((g) => "@" + g).join(" · ")}
       </p>
-      <p className="text-xs text-bronze mt-3 group-hover:underline">
+      <p className="text-sm text-bronze mt-3 group-hover:underline">
         Ver a prova dessa rodada →
       </p>
     </Link>

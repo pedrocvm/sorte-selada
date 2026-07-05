@@ -7,6 +7,7 @@ import WinnerCard from "@/components/WinnerCard";
 import VerifyPanel from "@/components/VerifyPanel";
 import SuspenseReveal from "@/components/SuspenseReveal";
 import type { Rodada } from "@/lib/rounds";
+import { CountUp } from "@/components/stage";
 
 export default function RoundReveal({ rodada }: { rodada: Rodada }) {
   const premioVerde = rodada.premios.find((p) => p.cor === "verde");
@@ -33,11 +34,13 @@ export default function RoundReveal({ rodada }: { rodada: Rodada }) {
         transition={{ duration: 0.5, delay: 0.15 }}
         className="rounded-card border border-line bg-bronze-chip/30 px-5 py-4 text-center"
       >
-        <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-bronze">
+        <p className="text-sm font-mono uppercase tracking-[0.2em] text-bronze">
           Código da sorte
         </p>
-        <p className="font-display text-3xl text-ink mt-1">{rodada.codigoDaSorte}</p>
-        <p className="text-xs text-ink2 mt-2 max-w-sm mx-auto">{rodada.regra}</p>
+        <p className="font-display text-5xl text-ink mt-1">
+          <CountUp value={rodada.codigoDaSorte} />
+        </p>
+        <p className="text-base text-ink2 mt-2 max-w-md mx-auto">{rodada.regra}</p>
       </motion.section>
 
       {/* O show — roda sozinho ao abrir, com botão de rever */}
@@ -67,10 +70,17 @@ export default function RoundReveal({ rodada }: { rodada: Rodada }) {
             </div>
             <button
               onClick={() => setShow(true)}
-              className="w-full rounded-lg border border-line text-ink2 hover:text-ink text-sm py-2 transition-colors"
+              className="w-full rounded-xl min-h-14 bg-ink text-cream hover:opacity-90 text-lg font-medium py-3.5 transition-opacity"
             >
               ↺ Rever o sorteio
             </button>
+            <a
+              href={`/rodada/${rodada.numero}/card`}
+              download={`sorte-selada-rodada-${rodada.numero}.png`}
+              className="block w-full text-center rounded-xl min-h-14 border border-bronze/40 text-bronze hover:bg-bronze-chip/40 text-lg font-medium py-3.5 transition-colors"
+            >
+              ✦ Baixar card do resultado (story)
+            </a>
           </motion.section>
         )}
       </AnimatePresence>
@@ -80,7 +90,7 @@ export default function RoundReveal({ rodada }: { rodada: Rodada }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <h3 className="font-display text-xl text-ink mb-3">
+        <h3 className="font-display text-2xl text-ink mb-3">
           Não confia? Confira você mesmo.
         </h3>
         <VerifyPanel

@@ -95,9 +95,9 @@ function Arrow({ side, onClick }: { side: "left" | "right"; onClick: () => void 
       aria-label={side === "left" ? "Anterior" : "Próximo"}
       className={`absolute top-1/2 -translate-y-1/2 ${
         side === "left" ? "left-0 -ml-1 sm:-ml-4" : "right-0 -mr-1 sm:-mr-4"
-      } grid place-items-center w-9 h-9 rounded-full border border-line bg-surface/80 backdrop-blur text-bronze shadow-soft hover:border-bronze/40 hover:bg-bronze-chip/40 transition-colors`}
+      } grid place-items-center w-12 h-12 rounded-full border border-line bg-surface/80 backdrop-blur text-bronze shadow-soft hover:border-bronze/40 hover:bg-bronze-chip/40 transition-colors`}
     >
-      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         {side === "left" ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
       </svg>
     </button>
@@ -116,18 +116,18 @@ function Hero() {
       <div className="floaty">
         <Gem3D />
       </div>
-      <p className="text-[11px] font-mono uppercase tracking-[0.28em] text-bronze mt-1">
+      <p className="text-sm font-mono uppercase tracking-[0.28em] text-bronze mt-1">
         À prova de fraude · confira você mesmo
       </p>
-      <h1 className="font-display text-4xl sm:text-6xl mt-2 leading-tight gold-text pb-1">
+      <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl mt-2 leading-tight gold-text pb-1">
         Sorte Selada
       </h1>
-      <p className="text-ink2 mt-3 max-w-md mx-auto leading-relaxed text-sm sm:text-base">
+      <p className="text-ink2 mt-3 max-w-lg mx-auto leading-relaxed text-base sm:text-lg">
         A cada jogo do Brasil na Copa, a Dourê sorteia dois colares — um verde,
         um azul. Toda lista é trancada em público, e qualquer pessoa pode
         conferir o resultado sozinha.
       </p>
-      <p className="text-xs text-bronze/70 mt-6 font-mono">deslize para ver como funciona →</p>
+      <p className="text-sm text-bronze mt-6 font-mono">deslize para ver como funciona →</p>
     </div>
   );
 }
@@ -135,7 +135,7 @@ function Hero() {
 function Como() {
   return (
     <div className="text-center">
-      <h2 className="font-display text-2xl sm:text-3xl text-ink mb-6">Como funciona</h2>
+      <h2 className="font-display text-3xl sm:text-4xl text-ink mb-6">Como funciona</h2>
       <div className="grid sm:grid-cols-3 gap-3">
         {PASSOS.map((s, idx) => (
           <motion.div
@@ -148,8 +148,8 @@ function Como() {
             <span className="coin grid place-items-center w-9 h-9 rounded-full font-display font-semibold text-bronze-dark transition-transform group-hover:scale-110 group-hover:rotate-6">
               {s.n}
             </span>
-            <p className="font-display text-base text-ink mt-3">{s.t}</p>
-            <p className="text-xs text-ink2 mt-1.5 leading-relaxed">{s.d}</p>
+            <p className="font-display text-lg text-ink mt-3">{s.t}</p>
+            <p className="text-sm text-ink2 mt-1.5 leading-relaxed">{s.d}</p>
           </motion.div>
         ))}
       </div>
@@ -157,17 +157,40 @@ function Como() {
   );
 }
 
+// ponytail: campanha da Copa tem tamanho fixo conhecido; vira campo da rodada se mudar
+const TOTAL_COPA = 7;
+
 function Rodadas({ rodadas }: { rodadas: Rodada[] }) {
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-4">
-        <h2 className="font-display text-2xl sm:text-3xl text-ink">Rodadas</h2>
-        <Link href="/verificar" className="text-xs text-bronze hover:underline">
+      <div className="flex items-baseline justify-between mb-3">
+        <h2 className="font-display text-3xl sm:text-4xl text-ink">Rodadas</h2>
+        <Link href="/verificar" className="text-sm text-bronze hover:underline py-2">
           Conferir manualmente →
         </Link>
       </div>
+
+      {/* Barra de progresso da campanha */}
+      <div className="mb-4">
+        <div className="flex items-baseline justify-between text-sm font-mono text-ink2 mb-1.5">
+          <span>
+            Rodada {Math.min(rodadas.length, TOTAL_COPA)} de {TOTAL_COPA}
+          </span>
+          <span>{TOTAL_COPA - Math.min(rodadas.length, TOTAL_COPA)} por vir</span>
+        </div>
+        <div className="h-2.5 rounded-full bg-line/60 overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min(100, (rodadas.length / TOTAL_COPA) * 100)}%` }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="h-full rounded-full"
+            style={{ background: "linear-gradient(90deg,#876B45,#C6A566)" }}
+          />
+        </div>
+      </div>
+
       {rodadas.length === 0 ? (
-        <div className="rounded-card border border-dashed border-line bg-surface/50 p-8 text-center text-ink2 text-sm">
+        <div className="rounded-card border border-dashed border-line bg-surface/50 p-8 text-center text-ink2 text-base">
           Nenhuma rodada publicada ainda. A primeira aparece aqui assim que for lacrada.
         </div>
       ) : (

@@ -11,13 +11,39 @@
   }
 }
 
+/* ── Tokens de cor (WCAG AA: texto ≥4.5:1, texto grande/UI ≥3:1) ── */
+:root {
+  --bg:          #faf9f7;
+  --ink:         #1f1d1a;
+  --gold:        #6f5733;  /* dourado de TEXTO (~6.5:1 no creme) */
+  --gold-deco:   #876b45;  /* dourado antigo, só decoração/ícones grandes */
+  --muted:       #5c584f;  /* secundário legível também no bege */
+  --card-beige:  #e4d9c4;
+  --green:       #3e7a5c;
+  --blue:        #3b5d8a;
+  --green-dark:  #5fa07d;  /* texto verde sobre fundo escuro */
+  --blue-dark:   #6b8fc4;  /* texto azul sobre fundo escuro */
+  --border:      #cfc7ba;  /* borda de input visível (~3:1) */
+  --placeholder: #6e6a63;  /* ~4.5:1 */
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: #FAF9F7;
-  color: #1F1D1A;
+  background-color: var(--bg);
+  color: var(--ink);
+}
+
+::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 
 ::selection {

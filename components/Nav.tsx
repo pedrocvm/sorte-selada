@@ -19,7 +19,7 @@ export default function Nav() {
             href="/sortear"
             aria-label="Área da Dourê"
             title="Área da Dourê"
-            className="grid place-items-center w-8 h-8 rounded-full border border-line text-bronze hover:text-bronze-dark hover:border-bronze/40 hover:bg-bronze-chip/40 transition-colors"
+            className="grid place-items-center w-12 h-12 rounded-full border border-line text-bronze hover:text-bronze-dark hover:border-bronze/40 hover:bg-bronze-chip/40 transition-colors"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <rect x="5" y="11" width="14" height="10" rx="2" />

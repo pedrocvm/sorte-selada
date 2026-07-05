@@ -34,7 +34,29 @@ export async function POST(req: NextRequest) {
     contentType: "application/json",
     allowOverwrite: true,
     addRandomSuffix: false,
+    cacheControlMaxAge: 60, // mínimo permitido — republicação aparece rápido mesmo sem o cache-buster
   });
+
+  // Overwrite no Blob pode levar segundos pra propagar. Só devolvemos o link
+  // quando o storage já serve ESTE resultado — assim "publicar → abrir o link"
+  // nunca mostra uma rodada antiga (é o caminho crítico de confiança).
+  for (let i = 0; i < 5; i++) {
+    try {
+      const r = await fetch(`${url}?v=${Date.now()}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(3000),
+      });
+      const atual = (await r.json()) as Rodada;
+      if (
+        atual?.selo === rodada.selo &&
+        JSON.stringify(atual.ganhadores) === JSON.stringify(rodada.ganhadores)
+      )
+        break;
+    } catch {
+      // ainda propagando — tenta de novo
+    }
+    await new Promise((s) => setTimeout(s, 1000));
+  }
 
   return NextResponse.json({ ok: true, numero: rodada.numero, blobUrl: url });
 }

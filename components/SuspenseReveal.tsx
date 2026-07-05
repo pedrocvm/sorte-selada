@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Gem3D from "@/components/Gem3D";
+import { playChime } from "@/components/stage";
 
 type Premio = { cor: "verde" | "azul"; nome: string };
 
+// hex são as variantes claras dos prêmios — legíveis sobre o palco escuro (AA)
 const CORES: Record<string, { hex: string; soft: string }> = {
-  verde: { hex: "#3E7A5C", soft: "rgba(62,122,92,0.14)" },
-  azul: { hex: "#3B5D8A", soft: "rgba(59,93,138,0.14)" },
+  verde: { hex: "#5FA07D", soft: "rgba(62,122,92,0.14)" },
+  azul: { hex: "#6B8FC4", soft: "rgba(59,93,138,0.14)" },
 };
 
 // Show do sorteio: um rolo de nomes que acelera, desacelera e trava no
@@ -19,11 +21,13 @@ export default function SuspenseReveal({
   ganhadores,
   premios,
   onDone,
+  som = false,
 }: {
   lista: string[];
   ganhadores: string[];
   premios: Premio[];
   onDone?: () => void;
+  som?: boolean;
 }) {
   const reduce = useReducedMotion();
   const [idx, setIdx] = useState(0); // qual prêmio está sorteando
@@ -59,6 +63,7 @@ export default function SuspenseReveal({
       setDisplay(winner);
       setFase("travado");
       setBurst((b) => b + 1);
+      if (som) playChime();
     }
 
     async function show() {
@@ -71,6 +76,7 @@ export default function SuspenseReveal({
           setDisplay(ganhadores[i]);
           setFase("travado");
           setBurst((b) => b + 1);
+          if (som) playChime();
         } else {
           setFase("rolando");
           await rolar(ganhadores[i]);
@@ -100,7 +106,7 @@ export default function SuspenseReveal({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="relative overflow-hidden rounded-card border border-line bg-ink text-cream shadow-soft"
-      style={{ minHeight: 260 }}
+      style={{ minHeight: 320 }}
     >
       {/* halo pulsante atrás do palco */}
       <motion.div
@@ -118,26 +124,41 @@ export default function SuspenseReveal({
           key={`label-${idx}`}
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[11px] font-mono uppercase tracking-[0.24em]"
+          className="text-sm font-mono uppercase tracking-[0.24em]"
           style={{ color: paleta.hex }}
         >
           {fase === "intro" ? `Sorteando · ${nomePremio}` : nomePremio}
         </motion.p>
 
-        {/* o rolo de nomes */}
-        <div className="relative mt-4 h-16 flex items-center justify-center w-full">
+        {/* contador de tensão antes do rolo girar */}
+        {fase === "intro" && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-2 text-base text-cream/70"
+          >
+            {lista.length} na disputa por {premios.length === 1 ? "este prêmio" : `${premios.length} colares`}
+          </motion.p>
+        )}
+
+        {/* o rolo de nomes — o clímax filmado, tamanho de herói */}
+        <div className="relative mt-4 h-20 sm:h-28 lg:h-32 flex items-center justify-center w-full">
           <AnimatePresence mode="popLayout">
             <motion.span
               key={display + idx + fase}
-              initial={fase === "rolando" ? { y: 24, opacity: 0 } : { scale: 0.7, opacity: 0 }}
+              initial={fase === "rolando" ? { y: 28, opacity: 0 } : { scale: 0.7, opacity: 0 }}
               animate={
                 fase === "travado"
-                  ? { scale: [1.25, 1], opacity: 1, y: 0 }
+                  ? { scale: 1, opacity: 1, y: 0 }
                   : { y: 0, opacity: 1 }
               }
-              exit={{ y: -24, opacity: 0 }}
-              transition={{ duration: fase === "travado" ? 0.5 : 0.12, ease: "easeOut" }}
-              className="font-display text-3xl sm:text-4xl"
+              exit={{ y: -28, opacity: 0 }}
+              transition={
+                fase === "travado"
+                  ? { type: "spring", stiffness: 260, damping: 11 } // o nome "quica" antes de fixar
+                  : { duration: 0.12, ease: "easeOut" }
+              }
+              className="font-display text-4xl sm:text-6xl lg:text-7xl px-4 max-w-full truncate"
               style={{ color: fase === "travado" ? paleta.hex : "#FAF9F7" }}
             >
               @{display}
@@ -170,7 +191,7 @@ export default function SuspenseReveal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-3 text-xs text-cream/60"
+            className="mt-3 text-sm text-cream/70"
           >
             {idx + 1} de {ganhadores.length}
           </motion.p>

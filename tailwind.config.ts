@@ -9,13 +9,14 @@ const config: Config = {
         cream: "#FAF9F7",
         surface: "#FFFFFF",
         ink: "#1F1D1A",
-        ink2: "#6E6A63",
-        line: "#ECE9E4",
-        // Acento Dourê
-        bronze: { DEFAULT: "#876B45", chip: "#E4D9C4", dark: "#5F4C31" },
-        // Estados (tom calmo, nunca vermelho agressivo)
-        sage: "#4C8A6A",
-        amber: "#C98A2D",
+        // hexes espelham os tokens de globals.css :root (var() quebra os modificadores /40)
+        ink2: "#5C584F",
+        line: "#CFC7BA",
+        // Acento Dourê — DEFAULT é o dourado de TEXTO (AA); deco é o antigo, só enfeite
+        bronze: { DEFAULT: "#6F5733", deco: "#876B45", chip: "#E4D9C4", dark: "#5F4C31" },
+        // Estados (tom calmo, nunca vermelho agressivo) — escurecidos p/ AA em texto
+        sage: "#3E7A5C",
+        amber: "#8F6118",
         // Cores dos dois prêmios (tema Seleção, harmonizadas com a paleta terrosa)
         premioVerde: { DEFAULT: "#3E7A5C", chip: "#DCEAE2" },
         premioAzul: { DEFAULT: "#3B5D8A", chip: "#DEE6F0" },

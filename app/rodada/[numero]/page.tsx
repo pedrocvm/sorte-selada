@@ -42,10 +42,10 @@ export default async function RodadaPage({
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-2xl px-5 py-8">
         <header className="text-center mb-8">
-          <p className="text-[11px] font-mono uppercase tracking-[0.24em] text-bronze">
+          <p className="text-sm font-mono uppercase tracking-[0.24em] text-bronze">
             Rodada {String(rodada.numero).padStart(2, "0")} · {data}
           </p>
-          <h1 className="font-display text-3xl sm:text-4xl mt-1 gold-text pb-1">
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl mt-1 gold-text pb-1">
             {rodada.jogo}
           </h1>
         </header>

@@ -7,6 +7,7 @@ import SuspenseReveal from "@/components/SuspenseReveal";
 import Gem3D from "@/components/Gem3D";
 import DiamondFacetGlow from "@/components/DiamondFacetGlow";
 import GoldParticles, { GoldConfetti } from "@/components/GoldParticles";
+import { Scramble } from "@/components/stage";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -47,6 +48,9 @@ export default function SortearTool() {
   const [trilha, setTrilha] = useState<TrailStep[]>([]);
   const [mostrando, setMostrando] = useState<number | null>(null);
   const [revelado, setRevelado] = useState<[boolean, boolean]>([false, false]);
+
+  // som da revelação — muda muito ao vivo; default desligado
+  const [som, setSom] = useState(false);
 
   // publicação
   const [publicando, setPublicando] = useState(false);
@@ -173,13 +177,13 @@ export default function SortearTool() {
                 <motion.span
                   animate={{ scale: ativo && !reduce ? [1, 1.12, 1] : 1 }}
                   transition={{ repeat: ativo ? Infinity : 0, duration: 1.8 }}
-                  className={`grid place-items-center w-9 h-9 rounded-full text-sm font-display font-semibold ${
-                    p.feito || ativo ? "coin text-bronze-dark" : "bg-line text-ink2"
+                  className={`grid place-items-center w-12 h-12 rounded-full text-base font-display font-semibold ${
+                    p.feito || ativo ? "coin text-bronze-dark" : "bg-line text-ink"
                   }`}
                 >
                   {p.feito ? "✓" : i + 1}
                 </motion.span>
-                <span className={`text-sm font-medium ${ativo ? "text-ink" : "text-ink2"}`}>
+                <span className={`text-base font-medium ${ativo ? "text-ink" : "text-ink2"}`}>
                   {p.rotulo}
                 </span>
               </button>
@@ -217,7 +221,7 @@ export default function SortearTool() {
             )}
             {slide === 2 && (
               <SlideSorteio
-                {...{ selo, lista, codigo, setCodigo, codigoOk, confirmarCodigo, premios, ganhadores, mostrando, setMostrando, revelado, setRevelado, ambosRevelados, publicar, publicando, linkPublico, copiado, setCopiado }}
+                {...{ selo, lista, codigo, setCodigo, codigoOk, confirmarCodigo, premios, ganhadores, mostrando, setMostrando, revelado, setRevelado, ambosRevelados, publicar, publicando, linkPublico, copiado, setCopiado, som, setSom }}
               />
             )}
           </motion.section>
@@ -238,7 +242,7 @@ export default function SortearTool() {
             </motion.p>
           )}
         </AnimatePresence>
-        <button onClick={recomecar} className="ml-auto text-xs text-ink2 hover:text-ink transition-colors">
+        <button onClick={recomecar} className="ml-auto text-sm text-ink2 hover:text-ink transition-colors py-2 px-1">
           ↺ Recomeçar
         </button>
       </div>
@@ -255,12 +259,12 @@ function Campo({
 }: { label: string; className?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className={`block ${className}`}>
-      <span className="block text-[11px] font-mono uppercase tracking-[0.16em] text-bronze mb-1.5">
+      <span className="block text-sm font-mono uppercase tracking-[0.16em] text-bronze mb-1.5">
         {label}
       </span>
       <input
         {...props}
-        className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-bronze/50 focus:border-bronze/60 focus:-translate-y-0.5 focus:shadow-md hover:border-bronze/30 disabled:opacity-60 disabled:hover:border-line"
+        className="w-full h-14 rounded-xl border border-line bg-surface px-4 text-lg text-ink shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-bronze/50 focus:border-bronze/60 focus:-translate-y-0.5 focus:shadow-md hover:border-bronze/30 disabled:opacity-60 disabled:hover:border-line"
       />
     </label>
   );
@@ -275,7 +279,7 @@ function BotaoOuro({
       whileHover={{ scale: 1.015 }}
       whileTap={{ scale: 0.97 }}
       {...props}
-      className="w-full rounded-xl py-3.5 text-base font-semibold text-cream shadow-lg transition-opacity disabled:opacity-50"
+      className="w-full rounded-xl min-h-14 px-8 py-4 text-lg font-semibold text-cream shadow-lg transition-opacity disabled:opacity-50"
       style={{
         background: "linear-gradient(120deg,#5F4C31,#876B45 40%,#C6A566 50%,#876B45 60%,#5F4C31)",
         backgroundSize: "200% auto",
@@ -289,7 +293,7 @@ function BotaoOuro({
 
 function Kicker({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] font-mono uppercase tracking-[0.26em] text-bronze text-center">
+    <p className="text-sm font-mono uppercase tracking-[0.26em] text-bronze text-center">
       {children}
     </p>
   );
@@ -310,7 +314,7 @@ function SlideDados(p: {
   return (
     <div className="mx-auto max-w-xl">
       <Kicker>Área da Dourê</Kicker>
-      <h1 className="font-display text-3xl sm:text-4xl gold-text text-center pb-1 mt-1">
+      <h1 className="font-display text-4xl lg:text-5xl gold-text text-center pb-1 mt-1">
         Dados da rodada
       </h1>
       <div className="mt-5 grid grid-cols-2 gap-3.5">
@@ -338,7 +342,7 @@ function SlideLista(p: {
   return (
     <div className="mx-auto max-w-xl">
       <Kicker>Um nome por linha · repetidos são unidos sozinhos</Kicker>
-      <h1 className="font-display text-3xl sm:text-4xl gold-text text-center pb-1 mt-1">
+      <h1 className="font-display text-4xl lg:text-5xl gold-text text-center pb-1 mt-1">
         Quem está concorrendo?
       </h1>
       <div className="relative mt-5">
@@ -346,8 +350,8 @@ function SlideLista(p: {
           value={p.listaTexto}
           onChange={(e) => p.setListaTexto(e.target.value)}
           disabled={p.trancada}
-          rows={9}
-          className="w-full rounded-xl border border-line bg-surface px-4 py-3 font-mono text-sm text-ink shadow-sm resize-none transition-all focus:outline-none focus:ring-2 focus:ring-bronze/50 focus:border-bronze/60 hover:border-bronze/30 disabled:opacity-70"
+          rows={7}
+          className="w-full rounded-xl border border-line bg-surface px-4 py-3 font-mono text-base text-ink shadow-sm resize-none transition-all focus:outline-none focus:ring-2 focus:ring-bronze/50 focus:border-bronze/60 hover:border-bronze/30 disabled:opacity-70"
           placeholder={"@maria.silva\n@joao_p\n@carla.designs"}
         />
         <AnimatePresence>
@@ -357,7 +361,7 @@ function SlideLista(p: {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               key={p.participantes}
-              className="absolute -top-2.5 right-3 coin px-3 py-1 rounded-full text-xs font-semibold text-bronze-dark"
+              className="absolute -top-3 right-3 coin px-3.5 py-1.5 rounded-full text-sm font-semibold text-bronze-dark"
             >
               {p.participantes} {p.participantes === 1 ? "participante" : "participantes"}
             </motion.span>
@@ -372,10 +376,13 @@ function SlideLista(p: {
             animate={{ opacity: 1, y: 0 }}
             className="rounded-xl border border-dashed border-bronze/50 bg-bronze-chip/40 px-4 py-3 text-center"
           >
-            <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-bronze">
+            <p className="text-sm font-mono uppercase tracking-[0.2em] text-bronze">
               Lista trancada 🔒
             </p>
-            <p className="font-mono text-xs text-ink mt-1 break-all">{p.selo}</p>
+            {/* o selo é "cunhado": embaralha e estabiliza, dando materialidade ao hash */}
+            <p className="font-mono text-base text-ink mt-1 break-all">
+              <Scramble text={p.selo} />
+            </p>
           </motion.div>
           <BotaoOuro onClick={p.onNext}>Ir pro sorteio →</BotaoOuro>
         </div>
@@ -401,6 +408,7 @@ function SlideSorteio(p: {
   ambosRevelados: boolean;
   publicar: () => void; publicando: boolean;
   linkPublico: string; copiado: boolean; setCopiado: (v: boolean) => void;
+  som: boolean; setSom: (v: boolean) => void;
 }) {
   const reduce = useReducedMotion();
   return (
@@ -411,25 +419,34 @@ function SlideSorteio(p: {
       {p.ambosRevelados && p.mostrando === null && <GoldConfetti />}
 
       <div className="relative z-10">
-        <div className="flex items-center justify-center gap-2 text-[11px] font-mono text-cream/60">
+        <div className="flex items-center justify-center gap-2.5 text-sm font-mono text-cream/75">
           <span className="uppercase tracking-[0.2em] text-bronze-chip">Lista trancada</span>
           <span className="text-cream/40">·</span>
-          <span>{p.lista.length} participantes</span>
+          <span>{p.lista.length} na disputa</span>
           <span className="text-cream/40">·</span>
           <span title={p.selo}>{p.selo.slice(0, 12)}…</span>
+          <span className="text-cream/40">·</span>
+          <button
+            onClick={() => p.setSom(!p.som)}
+            aria-pressed={p.som}
+            title={p.som ? "Desligar som da revelação" : "Ligar som da revelação"}
+            className="grid place-items-center w-10 h-10 -my-2 rounded-full hover:bg-cream/10 transition-colors"
+          >
+            {p.som ? "🔔" : "🔕"}
+          </button>
         </div>
 
         {/* Código da sorte */}
         {!p.codigoOk ? (
           <div className="mt-4 mx-auto max-w-sm text-center">
-            <p className="font-display text-2xl gold-text pb-1">Código da sorte</p>
+            <p className="font-display text-3xl gold-text pb-1">Código da sorte</p>
             <input
               value={p.codigo}
               onChange={(e) => p.setCodigo(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && p.confirmarCodigo()}
               placeholder="ex.: 30"
               autoFocus
-              className="mt-3 w-full rounded-xl border border-bronze/40 bg-cream/10 px-4 py-3.5 text-center font-display text-3xl text-cream placeholder:text-cream/30 focus:outline-none focus:ring-2 focus:ring-bronze/60 transition-all"
+              className="mt-3 w-full rounded-xl border border-bronze-chip/50 bg-cream/10 px-4 py-4 text-center font-display text-4xl text-cream placeholder:text-cream/40 focus:outline-none focus:ring-2 focus:ring-bronze-chip/60 transition-all"
             />
             <div className="mt-3">
               <BotaoOuro onClick={p.confirmarCodigo}>Confirmar código ✦</BotaoOuro>
@@ -441,11 +458,11 @@ function SlideSorteio(p: {
             animate={{ opacity: 1, scale: 1 }}
             className="mt-3 flex items-center justify-center gap-2"
           >
-            <span className="coin grid place-items-center w-8 h-8 rounded-full font-display font-semibold text-bronze-dark text-sm">
+            <span className="coin grid place-items-center w-9 h-9 rounded-full font-display font-semibold text-bronze-dark text-base">
               ✦
             </span>
-            <span className="font-mono text-sm text-cream/80">código da sorte:</span>
-            <span className="font-display text-2xl text-bronze-chip">{p.codigo}</span>
+            <span className="font-mono text-base text-cream/85">código da sorte:</span>
+            <span className="font-display text-3xl text-bronze-chip">{p.codigo}</span>
           </motion.div>
         )}
 
@@ -455,6 +472,7 @@ function SlideSorteio(p: {
             {p.mostrando !== null ? (
               <motion.div key={`show-${p.mostrando}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <SuspenseReveal
+                  som={p.som}
                   lista={p.lista}
                   ganhadores={[p.ganhadores[p.mostrando]]}
                   premios={[p.premios[p.mostrando]]}
@@ -483,7 +501,7 @@ function SlideSorteio(p: {
                       className="rounded-card border p-4 text-center"
                       style={{ borderColor: `${c.hex}55`, background: c.soft }}
                     >
-                      <p className="text-[11px] font-mono uppercase tracking-[0.18em]" style={{ color: c.hex === "#3E7A5C" ? "#8FC4A8" : "#9FB8DA" }}>
+                      <p className="text-sm font-mono uppercase tracking-[0.18em]" style={{ color: c.hex === "#3E7A5C" ? "#8FC4A8" : "#9FB8DA" }}>
                         {premio.nome}
                       </p>
                       {done ? (
@@ -495,7 +513,7 @@ function SlideSorteio(p: {
                           className="mt-1"
                         >
                           <Gem3D size="sm" />
-                          <p className="font-display text-xl sm:text-2xl text-cream flex items-center justify-center gap-1.5 -mt-1">
+                          <p className="font-display text-3xl lg:text-4xl text-cream flex items-center justify-center gap-1.5 -mt-1">
                             @{p.ganhadores[i]}
                             <DiamondFacetGlow pulse color={c.hex} />
                           </p>
@@ -512,7 +530,7 @@ function SlideSorteio(p: {
                               : {}
                           }
                           transition={{ repeat: Infinity, duration: 2 }}
-                          className="mt-4 mb-2 w-full rounded-xl py-4 text-base font-semibold text-cream disabled:opacity-40"
+                          className="mt-4 mb-2 w-full rounded-xl min-h-14 py-4 text-lg font-semibold text-cream disabled:opacity-40"
                           style={{ background: c.grad }}
                         >
                           ✦ Sortear
@@ -541,9 +559,9 @@ function SlideSorteio(p: {
                 </BotaoOuro>
               ) : (
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
-                  <div className="flex items-center gap-2 rounded-xl border border-bronze/40 bg-cream/10 px-4 py-3">
-                    <span className="flex-1 truncate font-mono text-sm text-cream">{p.linkPublico}</span>
-                    <a href={p.linkPublico} target="_blank" rel="noreferrer" className="text-bronze-chip text-xs hover:underline shrink-0">
+                  <div className="flex items-center gap-2 rounded-xl border border-bronze-chip/50 bg-cream/10 px-4 py-3.5">
+                    <span className="flex-1 truncate font-mono text-base text-cream">{p.linkPublico}</span>
+                    <a href={p.linkPublico} target="_blank" rel="noreferrer" className="text-bronze-chip text-sm hover:underline shrink-0 py-2">
                       abrir ↗
                     </a>
                   </div>

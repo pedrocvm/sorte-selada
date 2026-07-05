@@ -63,26 +63,26 @@ export default function VerifyPanel({
 
   return (
     <div className="rounded-card border border-line bg-surface shadow-soft p-5 sm:p-6">
-      <p className="text-xs text-ink2 mb-4 leading-relaxed">
+      <p className="text-base text-ink2 mb-4 leading-relaxed">
         Cole a mesma lista e o mesmo código que foram anunciados no story.
         Aperte conferir — se o resultado bater, o sorteio foi limpo.
       </p>
 
-      <label className="block text-xs text-ink2 mb-1.5">Lista de participantes</label>
+      <label className="block text-sm text-ink2 mb-1.5">Lista de participantes</label>
       <textarea
         value={listaTexto}
         onChange={(e) => setListaTexto(e.target.value)}
         rows={6}
-        className="w-full rounded-lg border border-line bg-cream px-3 py-2.5 font-mono text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-bronze/40 resize-y"
+        className="w-full rounded-lg border border-line bg-cream px-3.5 py-3 font-mono text-base text-ink focus:outline-none focus:ring-2 focus:ring-bronze/40 resize-y"
         placeholder="cole a lista aqui..."
       />
 
-      <label className="block text-xs text-ink2 mb-1.5 mt-3">Código da sorte</label>
+      <label className="block text-sm text-ink2 mb-1.5 mt-3">Código da sorte</label>
       <input
         type="text"
         value={codigo}
         onChange={(e) => setCodigo(e.target.value)}
-        className="w-full rounded-lg border border-line bg-cream px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-bronze/40"
+        className="w-full h-14 rounded-lg border border-line bg-cream px-3.5 text-lg text-ink focus:outline-none focus:ring-2 focus:ring-bronze/40"
         placeholder="ex.: 30"
       />
 
@@ -91,7 +91,7 @@ export default function VerifyPanel({
         disabled={carregando}
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.97 }}
-        className="w-full mt-4 rounded-lg bg-bronze hover:bg-bronze-dark disabled:opacity-50 text-cream font-medium text-sm py-2.5 transition-colors"
+        className="w-full mt-4 rounded-lg min-h-14 bg-bronze hover:bg-bronze-dark disabled:opacity-50 text-cream font-medium text-lg py-3.5 transition-colors"
       >
         {carregando ? "Conferindo…" : "Conferir"}
       </motion.button>
@@ -109,16 +109,16 @@ export default function VerifyPanel({
           className="mt-4 space-y-3"
         >
           <div className="rounded-lg bg-cream border border-line px-3 py-3">
-            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-ink2">
+            <p className="text-sm font-mono uppercase tracking-[0.18em] text-ink2">
               Impressão digital recalculada
             </p>
-            <p className="font-mono text-[12px] text-ink break-all mt-1.5">
+            <p className="font-mono text-sm text-ink break-all mt-1.5">
               {resultado.selo}
             </p>
           </div>
 
           <div
-            className={`rounded-lg px-3 py-2.5 text-sm font-medium ${
+            className={`rounded-lg px-3.5 py-3 text-base font-medium ${
               resultado.bateComEsperado === false
                 ? "bg-amber/10 border border-amber/30 text-amber"
                 : "bg-sage/10 border border-sage/30 text-sage"

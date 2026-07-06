@@ -142,7 +142,7 @@ export default function SuspenseReveal({
         )}
 
         {/* o rolo de nomes — o clímax filmado, tamanho de herói */}
-        <div className="relative mt-4 h-20 sm:h-28 lg:h-32 flex items-center justify-center w-full">
+        <div className="relative mt-4 min-h-20 sm:min-h-28 lg:min-h-32 flex items-center justify-center w-full">
           <AnimatePresence mode="popLayout">
             <motion.span
               key={display + idx + fase}
@@ -158,7 +158,13 @@ export default function SuspenseReveal({
                   ? { type: "spring", stiffness: 260, damping: 11 } // o nome "quica" antes de fixar
                   : { duration: 0.12, ease: "easeOut" }
               }
-              className="font-display text-3xl sm:text-5xl lg:text-6xl px-4 max-w-full whitespace-nowrap"
+              className={`font-display px-4 max-w-full break-words text-center ${
+                display.length > 20
+                  ? "text-2xl sm:text-3xl lg:text-4xl"
+                  : display.length > 14
+                  ? "text-2xl sm:text-4xl lg:text-5xl"
+                  : "text-3xl sm:text-5xl lg:text-6xl"
+              }`}
               style={{ color: fase === "travado" ? paleta.hex : "#FAF9F7" }}
             >
               @{display}

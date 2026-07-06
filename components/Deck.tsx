@@ -26,7 +26,7 @@ export default function Deck({ slides }: { slides: React.ReactNode[] }) {
 
   return (
     <div
-      className="h-full flex flex-col items-center justify-center px-5 outline-none"
+      className="min-h-full flex flex-col items-center justify-center px-5 py-6 outline-none"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "ArrowRight") go(i + 1);
@@ -34,7 +34,7 @@ export default function Deck({ slides }: { slides: React.ReactNode[] }) {
       }}
     >
       {/* px extra reserva um corredor pras setas (w-12 = 48px) — evita que elas cubram o conteúdo */}
-      <div className="relative w-full max-w-3xl flex-1 min-h-0 flex items-center justify-center px-14 sm:px-16">
+      <div className="relative w-full max-w-3xl flex items-center justify-center px-14 sm:px-16">
         <AnimatePresence mode="wait" custom={dir}>
           <motion.section
             key={i}
@@ -51,7 +51,7 @@ export default function Deck({ slides }: { slides: React.ReactNode[] }) {
               if (info.offset.x < -80) go(i + 1);
               else if (info.offset.x > 80) go(i - 1);
             }}
-            className="w-full max-h-full overflow-y-auto"
+            className="w-full"
           >
             {slides[i]}
           </motion.section>

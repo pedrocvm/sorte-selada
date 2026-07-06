@@ -33,7 +33,7 @@ export default async function RodadaPage({
   if (!rodada) notFound();
 
   return (
-    <div className="h-full overflow-hidden">
+    <div className="min-h-full">
       <RoundReveal rodada={rodada} />
     </div>
   );

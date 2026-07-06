@@ -34,9 +34,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR" className={`${display.variable} ${body.variable} ${mono.variable}`}>
-      <body className="h-[100dvh] flex flex-col font-sans antialiased overflow-hidden">
+      <body className="min-h-[100dvh] flex flex-col font-sans antialiased">
         <Nav />
-        <main className="flex-1 min-h-0 overflow-hidden">{children}</main>
+        <main className="flex-1">{children}</main>
         <Footer />
       </body>
     </html>

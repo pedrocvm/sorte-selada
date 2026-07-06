@@ -17,7 +17,7 @@ const PASSOS = [
   {
     n: '2',
     t: 'Um código de fora decide',
-    d: 'O número que sorteia vem de algo público que a loja não controla — como a escalação da Seleção.',
+    d: 'O número que sorteia vem de algo público que não controlamos. Ex: A escalação da Seleção.',
   },
   {
     n: '3',
